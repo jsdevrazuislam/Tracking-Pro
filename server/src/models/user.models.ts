@@ -7,12 +7,19 @@ export enum UserRole {
   AGENT = "agent",
 }
 
+export enum UserStatus {
+  ACTIVE = "active",
+  DEACTIVATE = "deactivate",
+  BLOCKED = "blocked",
+}
+
 export class User extends Model {
   public id!: string;
   public full_name!: string;
   public email!: string;
   public password!: string;
   public role!: UserRole;
+  public status!: UserStatus;
 }
 
 User.init(
@@ -28,6 +35,10 @@ User.init(
     role: {
       type: DataTypes.ENUM(...Object.values(UserRole)),
       allowNull: false,
+    },
+    status: {
+      type: DataTypes.ENUM(...Object.values(UserStatus)),
+      defaultValue: UserStatus.ACTIVE
     },
   },
   { sequelize, modelName: "User", tableName: "users", timestamps: true }

@@ -239,8 +239,8 @@ export default function CustomerDashboard() {
                                                     <div className="flex items-start">
                                                         <MapPin className="h-4 w-4 mt-0.5 mr-2 flex-shrink-0 text-green-600" />
                                                         <div>
-                                                            <div className="font-medium">From: {parcel?.pickup_address}</div>
-                                                            <div className="font-medium">To: {parcel?.receiver_address}</div>
+                                                            <div className="font-medium">From: {parcel?.pickup_address?.place_name}</div>
+                                                            <div className="font-medium">To: {parcel?.receiver_address?.place_name}</div>
                                                         </div>
                                                     </div>
 
@@ -272,7 +272,7 @@ export default function CustomerDashboard() {
                                                 <div className="text-2xl font-bold text-gray-900">${parcel?.amount}</div>
                                                 <div className="text-sm text-gray-500 uppercase font-medium">{parcel?.payment_type}</div>
                                             </div>
-                                            <Link href={`/customer/track/${parcel.id}`}>
+                                            <Link href={`/customer/track/${parcel?.tracking_code}`}>
                                                 <Button
                                                     size="sm"
                                                     className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-300"

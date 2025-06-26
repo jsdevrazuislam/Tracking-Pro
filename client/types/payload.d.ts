@@ -10,10 +10,15 @@ interface RegisterPayload {
 }
 
 interface BookParcelPayload {
-  pickup_address: string;
-  receiver_address: string;
+  pickup_address: object;
+  receiver_address: object;
   parcel_size: number;
   parcel_type: string;
   payment_type: string;
   amount: number
+}
+
+interface AssignParcelBooking{
+  parcelId:string
+  agentId:string
 }

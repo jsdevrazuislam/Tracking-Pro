@@ -49,8 +49,8 @@ interface ParcelsEntity {
   id: string;
   senderId: string;
   amount: string;
-  receiver_address: string;
-  pickup_address: string;
+  receiver_address: Address;
+  pickup_address: Address;
   parcel_size: string;
   parcel_type: string;
   payment_type: string;
@@ -61,6 +61,13 @@ interface ParcelsEntity {
   createdAt: string;
   updatedAt: string;
   progress: number;
+  sender: User
+}
+
+interface Address{
+    lat:number,
+    long:number,
+    place_name:string
 }
 interface Pagination {
   totalItems: number;

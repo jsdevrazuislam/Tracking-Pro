@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { Shield, Home, Package, Users, BarChart3, Settings, LogOut, Menu, Bell } from "lucide-react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
+import { useAuthStore } from "@/store/store"
+import { useQueryClient } from "@tanstack/react-query"
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -16,29 +18,22 @@ interface AdminLayoutProps {
 export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const [user, setUser] = useState<any>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { logout, user } = useAuthStore()
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    const currentUser = localStorage.getItem("currentUser")
-    if (currentUser) {
-      setUser(JSON.parse(currentUser))
-    } else {
-      router.push("/")
-    }
-  }, [router])
-
+ 
   const handleLogout = () => {
-    localStorage.removeItem("currentUser")
     router.push("/")
+    logout()
+    queryClient.clear()
   }
 
   const navigation = [
     { name: "Dashboard", href: "/admin/dashboard", icon: Home, badge: null },
-    { name: "Assign Parcels", href: "/admin/assign-parcels", icon: Package, badge: "12" },
+    { name: "Assign Parcels", href: "/admin/assign-parcels", icon: Package, badge: null},
     { name: "Manage Users", href: "/admin/manage-users", icon: Users, badge: null },
-    { name: "Analytics", href: "/admin/analytics", icon: BarChart3, badge: null },
-    { name: "Settings", href: "/admin/settings", icon: Settings, badge: null },
+    { name: "View Bookings", href: "/admin/bookings", icon: BarChart3, badge: null },
   ]
 
   const NavItems = ({ mobile = false }: { mobile?: boolean }) => (
@@ -130,7 +125,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
               <div className="flex items-center space-x-3">
                 <div className="hidden sm:block text-right">
-                  <div className="text-sm font-medium text-gray-900">{user?.name}</div>
+                  <div className="text-sm font-medium text-gray-900">{user?.full_name}</div>
                   <div className="text-xs text-gray-600">System Administrator</div>
                 </div>
                 <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
@@ -158,7 +153,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     <Shield className="h-6 w-6 text-purple-600" />
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">{user?.name}</div>
+                    <div className="font-semibold text-gray-900">{user?.full_name}</div>
                     <div className="text-sm text-gray-600">Administrator</div>
                   </div>
                 </div>

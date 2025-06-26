@@ -4,23 +4,34 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Package, MapPin, CreditCard, Calendar } from "lucide-react"
 import { CustomerLayout } from "@/components/customer-layout"
 import { useRouter } from "next/navigation"
 import * as z from "zod";
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "@tanstack/react-query"
 import { bookParcel } from "@/lib/apis/parcel"
 import { toast } from "sonner"
+import MapboxAddressInput from "@/components/ui/autocomplete-input"
+import { useState } from "react"
 
 
 const parcelBookingSchema = z.object({
-    pickup_address: z.string().min(10, { message: "Pickup address must be at least 10 characters." }).max(255, { message: "Pickup address is too long." }),
-    receiver_address: z.string().min(10, { message: "Delivery address must be at least 10 characters." }).max(255, { message: "Delivery address is too long." }),
+    pickup_address: z.object({
+        place_name: z.string().min(10, { message: "Pickup address name must be at least 10 characters." }).max(255, { message: "Pickup address name is too long." }),
+        lat: z.number().min(-90, "Latitude must be between -90 and 90.").max(90, "Latitude must be between -90 and 90."),
+        long: z.number().min(-180, "Longitude must be between -180 and 180.").max(180, "Longitude must be between -180 and 180."),
+    }, { message: "Pickup address is required and must include name, latitude, and longitude." }),
+
+    receiver_address: z.object({
+        place_name: z.string().min(10, { message: "Receiver address name must be at least 10 characters." }).max(255, { message: "Receiver address name is too long." }),
+        lat: z.number().min(-90, "Latitude must be between -90 and 90.").max(90, "Latitude must be between -90 and 90."),
+        long: z.number().min(-180, "Longitude must be between -180 and 180.").max(180, "Longitude must be between -180 and 180."),
+    }, { message: "Receiver address is required and must include name, latitude, and longitude." }),
+
     parcel_type: z.enum([
         "document",
         "package",
@@ -43,29 +54,33 @@ type ParcelBookingInputs = z.infer<typeof parcelBookingSchema>;
 
 export default function BookParcel() {
     const router = useRouter()
+    const [query, setQuery] = useState("")
+    const [queryDeliver, setQueryDeliver] = useState("")
     const {
         register,
         handleSubmit,
         watch,
         setValue,
+        control,
         formState: { errors },
         reset,
     } = useForm<ParcelBookingInputs>({
         resolver: zodResolver(parcelBookingSchema),
         defaultValues: {
-            pickup_address: "",
-            receiver_address: "",
             parcel_type: "package",
-            parcel_size: 0.1,
+            parcel_size: 1,
             payment_type: "cod",
         },
     });
 
     const { mutate, isPending } = useMutation({
         mutationFn: bookParcel,
-        onSuccess: ({ data }) => {
-            console.log("data", data)
+        onSuccess: () => {
+            setQuery("")
+            setQueryDeliver("")
             reset();
+            router.push('/customer/dashboard')
+            toast.success('Parcel Booked Successfully')
         },
         onError: (error) => {
             toast.error(error.message)
@@ -110,22 +125,23 @@ export default function BookParcel() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="w-full">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="pickupAddress">Pickup Address</Label>
-                                        <Textarea
-                                            id="pickupAddress"
-                                            placeholder="Enter full pickup address"
-                                            {...register("pickup_address")}
-                                        />
-                                        {errors.pickup_address && (
-                                            <p className="text-red-500 text-sm">{errors.pickup_address.message}</p>
+                                    <Controller
+                                        name="pickup_address"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <MapboxAddressInput
+                                                field={field}
+                                                label="Pickup Address"
+                                                error={errors.pickup_address?.message}
+                                                query={query}
+                                                setQuery={setQuery}
+                                            />
                                         )}
-                                    </div>
+                                    />
                                 </div>
                             </CardContent>
                         </Card>
 
-                        {/* Delivery Details */}
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center">
@@ -136,17 +152,14 @@ export default function BookParcel() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="w-full">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="deliveryAddress">Delivery Address</Label>
-                                        <Textarea
-                                            id="deliveryAddress"
-                                            placeholder="Enter full delivery address"
-                                            {...register('receiver_address')}
-                                        />
-                                        {errors.receiver_address && (
-                                            <p className="text-red-500 text-sm">{errors.receiver_address.message}</p>
+                                    <Controller
+                                        name='receiver_address'
+                                        control={control}
+                                        render={({ field }) => (
+                                            <MapboxAddressInput query={queryDeliver}
+                                                setQuery={setQueryDeliver} field={field} label="Delivery Address" error={errors.receiver_address?.message} />
                                         )}
-                                    </div>
+                                    />
                                 </div>
                             </CardContent>
                         </Card>

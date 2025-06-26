@@ -1,23 +1,19 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MapPin, Package, Truck, CheckCircle, Clock, Phone, User } from "lucide-react"
 import { CustomerLayout } from "@/components/customer-layout"
 import { useParams } from "next/navigation"
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
+import { useQuery } from "@tanstack/react-query"
+import { trackParcel } from "@/lib/apis/parcel"
 
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
 
-const containerStyle = {
-  width: '100%',
-  height: '600px'
-}
-
-const center = {
-  lat: 23.8103,
-  lng: 90.4125
-}
 
 // Mock tracking data
 const mockTrackingData = {
@@ -97,10 +93,62 @@ const mockTrackingData = {
   },
 }
 
+
 export default function TrackParcel() {
   const params = useParams()
   const trackingId = params.id as string
   const [trackingData, setTrackingData] = useState<any>(null)
+  // const { data, isLoading } = useQuery({
+  //   queryKey: ['track_parcel', trackingId],
+  //   queryFn: () => trackParcel(trackingId),
+  //   enabled: !!trackingId
+  // })
+
+  const mapRef = useRef<mapboxgl.Map | null>(null)
+  const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const [agentMarker, setAgentMarker] = useState<mapboxgl.Marker | null>(null)
+
+  useEffect(() => {
+    if (mapRef.current) return
+
+    const initMap = () => {
+      if (!mapContainerRef.current) return
+
+      const map = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [90.4125, 23.8103],
+        zoom: 12
+      })
+
+      // Add pickup and destination markers
+      new mapboxgl.Marker({ color: 'green' }).setLngLat([90.4125, 23.8103]).addTo(map)
+      new mapboxgl.Marker({ color: 'red' }).setLngLat([91.7832, 22.3569]).addTo(map)
+
+      const marker = new mapboxgl.Marker({ color: 'blue' })
+        .setLngLat([90.4125, 23.8103])
+        .addTo(map)
+
+      setAgentMarker(marker)
+      mapRef.current = map
+    }
+
+    // Ensure map container DOM is available
+    requestAnimationFrame(initMap)
+
+    return () => {
+      mapRef.current?.remove()
+      mapRef.current = null
+    }
+  }, [])
+
+
+  // Update agent marker in real-time
+  useEffect(() => {
+    if (agentMarker) {
+      agentMarker.setLngLat([90.4125, 23.8103])
+    }
+  }, [agentMarker])
 
   useEffect(() => {
     // In a real app, this would be an API call
@@ -142,6 +190,7 @@ export default function TrackParcel() {
           <p className="text-gray-600">Real-time tracking for {trackingId}</p>
         </div>
 
+
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* Current Status */}
@@ -178,36 +227,7 @@ export default function TrackParcel() {
                 <CardDescription>Real-time location of your parcel</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="bg-gray-100 rounded-lg h-64 flex items-center justify-center relative overflow-hidden">
-                  {/* Simulated map background */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-blue-100"></div>
-                  <div className="absolute top-4 left-4 bg-white p-2 rounded shadow">
-                    <div className="text-xs font-medium">New York City</div>
-                  </div>
-
-                  {/* Route line */}
-                  <div className="absolute top-1/2 left-1/4 w-1/2 h-0.5 bg-blue-500 transform -translate-y-1/2"></div>
-
-                  {/* Start point */}
-                  <div className="absolute top-1/2 left-1/4 w-3 h-3 bg-green-500 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
-                  <div className="absolute top-1/2 left-1/4 mt-4 text-xs bg-white px-2 py-1 rounded shadow transform -translate-x-1/2">
-                    Pickup
-                  </div>
-
-                  {/* Current position */}
-                  <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-blue-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 animate-pulse">
-                    <Truck className="h-3 w-3 text-white absolute top-0.5 left-0.5" />
-                  </div>
-                  <div className="absolute top-1/2 left-1/2 mt-6 text-xs bg-white px-2 py-1 rounded shadow transform -translate-x-1/2">
-                    Current Location
-                  </div>
-
-                  {/* End point */}
-                  <div className="absolute top-1/2 right-1/4 w-3 h-3 bg-red-500 rounded-full transform translate-x-1/2 -translate-y-1/2"></div>
-                  <div className="absolute top-1/2 right-1/4 mt-4 text-xs bg-white px-2 py-1 rounded shadow transform translate-x-1/2">
-                    Delivery
-                  </div>
-                </div>
+                <div ref={mapContainerRef} className="w-full h-64 rounded-xl shadow-md" />
               </CardContent>
             </Card>
 
