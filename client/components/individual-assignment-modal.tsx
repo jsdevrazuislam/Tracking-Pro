@@ -144,6 +144,12 @@ export function IndividualAssignmentModal({ parcel }: IndividualAssignmentModalP
                                         </div>
                                     </div>
                                     <div>
+                                        <div className="text-gray-600">Phone</div>
+                                        <div className="font-medium">
+                                            {agent?.phone}
+                                        </div>
+                                    </div>
+                                    <div>
                                         <div className="text-gray-600">Completed</div>
                                         <div className="font-medium">{agent?.completedDeliveries}</div>
                                     </div>

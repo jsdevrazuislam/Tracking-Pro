@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Search, Package, MapPin, Clock, CheckCircle, AlertCircle, Truck, Navigation } from "lucide-react"
-import { CustomerLayout } from "@/components/customer-layout"
 import { useRouter } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
@@ -17,15 +16,12 @@ import { trackParcel } from "@/lib/apis/parcel"
 export default function TrackParcel() {
   const [trackingId, setTrackingId] = useState("")
   const [trackingData, setTrackingData] = useState<any>(null)
-  // const [isSearching, setIsSearching] = useState(false)
   const router = useRouter()
 
   const { mutate, isPending} = useMutation({
     mutationFn: trackParcel,
     onSuccess: (data) =>{
       console.log("data", data)
-      // router.push(`/customer/track/${trackingId.toUpperCase()}`)
-      // setTrackingData(data)
     },
     onError: (error) =>{
       toast.error(error?.message)
@@ -52,7 +48,6 @@ export default function TrackParcel() {
   }
 
   return (
-    <CustomerLayout>
       <div className="max-w-4xl mx-auto space-y-8 animate-in">
         {/* Header */}
         <div className="text-center space-y-4">
@@ -387,6 +382,5 @@ export default function TrackParcel() {
           </CardContent>
         </Card>
       </div>
-    </CustomerLayout>
   )
 }

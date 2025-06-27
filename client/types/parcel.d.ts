@@ -34,6 +34,20 @@ interface CustomerStats {
   pending: number;
 }
 
+ interface AgentStatsResponse {
+  statusCode: number;
+  data: AgentStatsData;
+  message: string;
+  success: boolean;
+}
+ interface AgentStatsData {
+  assigned: number;
+  picked: number;
+  in_transit: number;
+  delivered: number;
+}
+
+
 
 interface ParcelResponse {
   statusCode: number;
@@ -98,18 +112,13 @@ interface Pagination {
   current_location?: null;
   createdAt: string;
   updatedAt: string;
-  agent: Agent;
+  agent: User;
   timeline?: TimelineEntity[];
 }
  interface LocationOrReceiverAddressOrPickupAddress {
   lat: number;
   long: number;
   place_name: string;
-}
- interface Agent {
-  full_name: string;
-  email: string;
-  id: string;
 }
  interface TimelineEntity {
   id: string;
@@ -120,4 +129,42 @@ interface Pagination {
   description: string;
   createdAt: string;
   updatedAt: string;
+}
+
+
+ interface AgentNavigateDetailsResponse {
+  statusCode: number;
+  data: AgentNavigateDetailsData;
+  message: string;
+  success: boolean;
+}
+ interface AgentNavigateDetailsData {
+  parcel: Parcel;
+}
+ interface Parcel {
+  id: string;
+  senderId: string;
+  receiver_address: ReceiverAddressOrPickupAddress;
+  pickup_address: ReceiverAddressOrPickupAddress;
+  parcel_size: string;
+  amount: number;
+  parcel_type: string;
+  payment_type: string;
+  status: string;
+  assignedAgentId: string;
+  tracking_code: string;
+  current_location?: null;
+  createdAt: string;
+  updatedAt: string;
+  sender: User;
+}
+ interface ReceiverAddressOrPickupAddress {
+  lat: number;
+  long: number;
+  place_name: string;
+}
+ interface Location {
+  latitude: number;
+  longitude: number;
+  place_name: string;
 }

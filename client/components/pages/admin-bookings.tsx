@@ -10,7 +10,6 @@ import {
     Search,
     Filter,
 } from "lucide-react"
-import { AdminLayout } from "@/components/admin-layout"
 import { useQuery } from '@tanstack/react-query'
 import { getAllBookings } from '@/lib/apis/admin'
 import { format } from 'date-fns';
@@ -67,7 +66,6 @@ const AdminBookingList = () => {
     })
 
     return (
-        <AdminLayout>
             <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
                 <CardHeader>
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -145,7 +143,6 @@ const AdminBookingList = () => {
                     </div>
                 </CardContent>
             </Card>
-        </AdminLayout>
     )
 }
 

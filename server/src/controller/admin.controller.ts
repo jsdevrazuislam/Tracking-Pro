@@ -11,6 +11,7 @@ import PDFDocument from "pdfkit";
 import { UserStatus } from "@/models/user.models";
 import { ParcelTimeline } from "@/models/parcel-timeline.models";
 import { getStatusDescription } from "@/utils/helper";
+import { USER_ATTRIBUTE } from "@/constants";
 
 export const getAdminStats = asyncHandler(
   async (req: Request, res: Response) => {
@@ -391,7 +392,7 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
     return res.json(new ApiResponse(200, cached, "Users fetched (cached)"));
 
   const { rows: users, count: totalItems } = await User.findAndCountAll({
-    attributes: ["id", "full_name", "email", "status", "role", "createdAt"],
+    attributes: USER_ATTRIBUTE,
     order: [["createdAt", "DESC"]],
     limit,
     offset,
@@ -514,12 +515,12 @@ export const getAllBookings = asyncHandler(
         {
           model: User,
           as: "sender",
-          attributes: ["id", "full_name", "email", "status", "role"],
+          attributes: USER_ATTRIBUTE,
         },
         {
           model: User,
           as: "agent",
-          attributes: ["id", "full_name", "email", "status", "role"],
+          attributes: USER_ATTRIBUTE,
         },
       ],
       order: [["createdAt", "DESC"]],

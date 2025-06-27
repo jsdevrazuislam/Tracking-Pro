@@ -3,6 +3,7 @@
 import type React from "react"
 import { GlobalLoader } from "@/components/global-loader"
 import { useState, useEffect } from "react"
+import { useSocketStore } from "@/store/socket-store"
 
 
 export default function ClientLayout({
@@ -11,6 +12,7 @@ export default function ClientLayout({
     children: React.ReactNode
 }) {
     const [isLoading, setIsLoading] = useState(true)
+    const { initializeSocket, disconnectSocket } = useSocketStore();
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -19,6 +21,13 @@ export default function ClientLayout({
 
         return () => clearTimeout(timer)
     }, [])
+
+    useEffect(() => {
+        initializeSocket();
+        return () => {
+            disconnectSocket();
+        };
+    }, []);;
 
     if (isLoading) {
         return <GlobalLoader isLoading={isLoading} />

@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { MapPin, Clock, Search } from "lucide-react"
-import { AdminLayout } from "@/components/admin-layout"
 import { useQuery } from "@tanstack/react-query"
 import { unAssignParcels } from "@/lib/apis/admin"
 import { format } from 'date-fns';
@@ -45,7 +44,6 @@ export default function AssignParcels() {
   }, [data])
 
   return (
-    <AdminLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Assign Parcels</h1>
@@ -113,6 +111,5 @@ export default function AssignParcels() {
           </Card>
         </div>
       </div>
-    </AdminLayout>
   )
 }

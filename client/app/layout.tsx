@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { Inter, Noto_Sans } from 'next/font/google';
 import ReactQueryProvider from '@/configs/query-provider';
 import { Toaster } from "sonner"

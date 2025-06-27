@@ -26,6 +26,8 @@ interface EmitSocketEventParams<T> {
   payload: T;
 }
 
+const activeAgents = new Map<string, { parcelId: string; socketId: string }>();
+
 const initializeSocketIO = ({ io }: InitializeSocketIOOptions): void => {
   io.on("connection", async (socket: Socket) => {
     try {
@@ -74,8 +76,30 @@ const initializeSocketIO = ({ io }: InitializeSocketIOOptions): void => {
       if (!user) {
         console.log("Unauthenticated user connected");
       }
+
+      socket.on(SocketEventEnum.AGENT_JOIN, (parcelId: string) => {
+        activeAgents.set(socket.id, { parcelId, socketId: socket.id });
+        console.log(`Agent connected for parcel ${parcelId}`);
+      });
+
+      socket.on(SocketEventEnum.JOIN_CLIENT_PARCEL, (parcelId: string) => {
+        socket.join(parcelId);
+        console.log(`Client joined parcel ${parcelId}`);
+      });
+
+      socket.on(
+        SocketEventEnum.PARCEL_LOCATION,
+        (data: { parcelId: string; lat: number; lng: number }) => {
+          io.to(data.parcelId).emit(SocketEventEnum.PARCEL_LOCATION, {
+            latitude: data.lat,
+            longitude: data.lng,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      );
     } catch (error) {
       console.error("Socket connection error:", error);
+      activeAgents.delete(socket.id);
       socket.emit(
         SocketEventEnum.SOCKET_ERROR,
         error instanceof Error

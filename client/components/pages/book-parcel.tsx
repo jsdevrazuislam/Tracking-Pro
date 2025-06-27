@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Package, MapPin, CreditCard, Calendar } from "lucide-react"
-import { CustomerLayout } from "@/components/customer-layout"
 import { useRouter } from "next/navigation"
 import * as z from "zod";
 import { Controller, useForm } from "react-hook-form"
@@ -106,7 +105,6 @@ export default function BookParcel() {
 
 
     return (
-        <CustomerLayout>
             <div className="max-w-4xl mx-auto space-y-6">
                 <div>
                     <h1 className="text-3xl font-bold">Book New Parcel</h1>
@@ -265,6 +263,5 @@ export default function BookParcel() {
                     </div>
                 </form>
             </div>
-        </CustomerLayout>
     )
 }

@@ -7,7 +7,11 @@ const ApiStrings = {
   BOOK_PARCEL: '/parcel/',
   GET_PARCELS: '/parcel/my',
   GET_STATS: '/parcel/stats',
+  AGENT_STATS: '/parcel/agent-stats',
+  AGENT_ASSIGN_PARCELS: '/parcel/agent-assign-parcels',
   TRACK_PARCEL: '/parcel/track',
+  UPDATE_PARCEL_STATUS: '/parcel/update-status',
+  PARCEL_DETAILS: '/parcel/parcel-details',
   // Admin
   GET_ADMIN_STATS: '/admin/stats',
   REPORT_EXPORT: '/admin/export',

@@ -18,6 +18,7 @@ export class Parcel extends Model {
     public tracking_code!:string
     public current_location!:string
     public amount!:number
+    public updatedAt!:Date
  }
 
 Parcel.init({

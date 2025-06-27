@@ -16,7 +16,6 @@ import {
   Clock,
   CheckCircle,
 } from "lucide-react"
-import { AdminLayout } from "@/components/admin-layout"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import { adminStats } from "@/lib/apis/admin"
@@ -56,7 +55,6 @@ export default function AdminDashboard() {
   if(isPending) return <DashboardSkeleton />
 
   return (
-    <AdminLayout>
       <div className="space-y-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="space-y-2">
@@ -85,7 +83,7 @@ export default function AdminDashboard() {
               <Package className="h-5 w-5 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-900">{dashboardData?.dailyBookings ?? 0}</div>
+              <div className="text-3xl font-bold text-blue-900">{dashboardData?.dailyBookings}</div>
               <p className="text-xs text-blue-600 flex items-center mt-1">
                 <TrendingUp className="h-3 w-3 mr-1" />
                 +12% from yesterday
@@ -99,7 +97,7 @@ export default function AdminDashboard() {
               <Truck className="h-5 w-5 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-900">{dashboardData?.activeAgents ?? 0}</div>
+              <div className="text-3xl font-bold text-green-900">{dashboardData?.activeAgents}</div>
               <p className="text-xs text-green-600 mt-1">
                  online now
               </p>
@@ -113,7 +111,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-purple-900">
-                ${dashboardData?.codAmount?.toLocaleString() ?? 0}
+                ${dashboardData?.codAmount.toLocaleString()}
               </div>
               <p className="text-xs text-purple-600 mt-1">Pending collection</p>
             </CardContent>
@@ -125,7 +123,7 @@ export default function AdminDashboard() {
               <AlertTriangle className="h-5 w-5 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-red-900">{dashboardData?.failedDeliveries ?? 0}</div>
+              <div className="text-3xl font-bold text-red-900">{dashboardData?.failedDeliveries}</div>
               <p className="text-xs text-red-600 mt-1">Requires attention</p>
             </CardContent>
           </Card>
@@ -209,6 +207,5 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </div>
-    </AdminLayout>
   )
 }

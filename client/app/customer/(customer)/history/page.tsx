@@ -17,7 +17,6 @@ import {
   AlertCircle,
   Eye,
 } from "lucide-react"
-import { CustomerLayout } from "@/components/customer-layout"
 import Link from "next/link"
 
 // Mock historical data
@@ -215,7 +214,6 @@ export default function CustomerHistory() {
   }
 
   return (
-    <CustomerLayout>
       <div className="space-y-8 animate-in">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -464,6 +462,5 @@ export default function CustomerHistory() {
           </Card>
         )}
       </div>
-    </CustomerLayout>
   )
 }

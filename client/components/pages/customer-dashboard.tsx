@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Package, Plus, MapPin, Clock, CheckCircle, AlertCircle, TrendingUp, Calendar } from "lucide-react"
 import Link from "next/link"
-import { CustomerLayout } from "@/components/customer-layout"
 import { useAuthStore } from "@/store/store"
 import { useQueries } from "@tanstack/react-query"
 import { getParcels, getStats } from "@/lib/apis/parcel"
@@ -66,19 +65,18 @@ export default function CustomerDashboard() {
 
 
     if (isLoading) {
-        return <DashboardSkeleton />
+        return(
+                 <DashboardSkeleton />
+        )
     }
 
     if (isError) {
         return (
-            <CustomerLayout>
                 <div className="text-red-500">Error loading dashboard data: {error?.message}</div>
-            </CustomerLayout>
         );
     }
 
     return (
-        <CustomerLayout>
             <div className="space-y-8">
                 {/* Welcome Header */}
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -286,6 +284,5 @@ export default function CustomerDashboard() {
                     </CardContent>
                 </Card>
             </div>
-        </CustomerLayout>
     )
 }

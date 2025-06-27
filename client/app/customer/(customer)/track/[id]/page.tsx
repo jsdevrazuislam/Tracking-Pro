@@ -1,20 +1,38 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MapPin, Package, CheckCircle, Clock, Phone, User } from "lucide-react"
 import { CustomerLayout } from "@/components/customer-layout"
 import { useParams } from "next/navigation"
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
 import { useQuery } from "@tanstack/react-query"
 import { trackParcel } from "@/lib/apis/parcel"
 import { TrackingSkeleton } from "@/components/loading-skeleton"
 import { addDays, format } from "date-fns"
+import Link from "next/link"
+import LiveTrackingMap from "@/components/live-tracking-map"
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+function getDisplayStatus(systemStatus: string): string {
+  switch (systemStatus) {
+    case 'pending':
+      return 'Parcel Booked';
+    case 'assigned':
+      return 'Assigned to Rider';
+    case 'picked':
+      return 'Picked Up';
+    case 'in_transit':
+      return 'In Transit';
+    case 'out_for_delivery':
+      return 'Out for Delivery';
+    case 'delivered':
+      return 'Delivered';
+    case 'cancelled':
+      return 'Cancelled';
+    default:
+      return systemStatus.replace(/_/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
+  }
+}
 
 export default function TrackParcel() {
   const params = useParams()
@@ -25,50 +43,7 @@ export default function TrackParcel() {
     enabled: !!trackingId
   })
 
-  const mapRef = useRef<mapboxgl.Map | null>(null)
-  const mapContainerRef = useRef<HTMLDivElement | null>(null)
-  const [agentMarker, setAgentMarker] = useState<mapboxgl.Marker | null>(null)
   const trackingData = data?.data
-
-  useEffect(() => {
-    if (mapRef.current) return
-
-    const initMap = () => {
-      if (!mapContainerRef.current) return
-
-      const map = new mapboxgl.Map({
-        container: mapContainerRef.current,
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [90.4125, 23.8103],
-        zoom: 12
-      })
-
-      new mapboxgl.Marker({ color: 'green' }).setLngLat([90.4125, 23.8103]).addTo(map)
-      new mapboxgl.Marker({ color: 'red' }).setLngLat([91.7832, 22.3569]).addTo(map)
-
-      const marker = new mapboxgl.Marker({ color: 'blue' })
-        .setLngLat([90.4125, 23.8103])
-        .addTo(map)
-
-      setAgentMarker(marker)
-      mapRef.current = map
-    }
-
-    requestAnimationFrame(initMap)
-
-    return () => {
-      mapRef.current?.remove()
-      mapRef.current = null
-    }
-  }, [])
-
-
-  useEffect(() => {
-    if (agentMarker) {
-      agentMarker.setLngLat([90.4125, 23.8103])
-    }
-  }, [agentMarker])
-
 
   if (!trackingData) {
     return (
@@ -139,15 +114,7 @@ export default function TrackParcel() {
             </Card>
 
             {/* Live Map Simulation */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Live Tracking Map</CardTitle>
-                <CardDescription>Real-time location of your parcel</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div ref={mapContainerRef} className="w-full h-64 rounded-xl shadow-md" />
-              </CardContent>
-            </Card>
+            <LiveTrackingMap trackingData={trackingData} />
 
             {/* Timeline */}
             <Card>
@@ -160,9 +127,9 @@ export default function TrackParcel() {
                   {trackingData?.timeline?.map((event) => (
                     <div key={event.id} className="flex items-start space-x-4">
                       <div className="flex-shrink-0 mt-1">
-                        {event.status === "Delivered" ? (
+                        {event.status === "delivered" ? (
                           <CheckCircle className="h-5 w-5 text-green-600" />
-                        ) : event.status === "In Transit" || event.status === "Out for Delivery" ? (
+                        ) : event.status === "in_transit" || event.status === "cancelled" ? (
                           <Clock className="h-5 w-5 text-blue-600" />
                         ) : (
                           <Package className="h-5 w-5 text-orange-600" />
@@ -170,7 +137,7 @@ export default function TrackParcel() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <div className="font-medium">{event.status}</div>
+                          <div className="font-medium">{getDisplayStatus(event?.status)}</div>
                           <div className="text-sm text-gray-500">{format(new Date(event?.timestamp), 'yyyy-MM-dd hh:mm a')}</div>
                         </div>
                         <div className="text-sm text-gray-600 mt-1">{event?.location?.place_name}</div>
@@ -196,10 +163,12 @@ export default function TrackParcel() {
                   <div className="font-medium">{trackingData?.agent?.full_name}</div>
                   <div className="text-sm text-gray-600">Assigned Agent</div>
                 </div>
-                <Button variant="outline" className="w-full">
-                  <Phone className="h-4 w-4 mr-2" />
-                  Call Agent
-                </Button>
+                <Link href={`tel:${trackingData?.agent?.phone}`}>
+                  <Button variant="outline" className="w-full">
+                    <Phone className="h-4 w-4 mr-2" />
+                    Call Agent
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
