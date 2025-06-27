@@ -16,6 +16,7 @@ const ApiStrings = {
   GET_USERS: '/admin/users',
   ASSIGN_PARCEL: '/admin/assign-parcel',
   GET_BOOKINGS: '/admin/bookings',
+  CHANGE_USER_STATUS: '/admin/user',
 };
 
 export default ApiStrings;

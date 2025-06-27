@@ -9,6 +9,8 @@ import { col, fn, Op } from "sequelize";
 import { Parser } from "json2csv";
 import PDFDocument from "pdfkit";
 import { UserStatus } from "@/models/user.models";
+import { ParcelTimeline } from "@/models/parcel-timeline.models";
+import { getStatusDescription } from "@/utils/helper";
 
 export const getAdminStats = asyncHandler(
   async (req: Request, res: Response) => {
@@ -35,6 +37,8 @@ export const getAdminStats = asyncHandler(
       activeAgents,
       codSumRow,
       deliveredToday,
+      transitToday,
+      pendingToday,
       failedDeliveries,
       monthRevenueRow,
       todayRevenueRow,
@@ -58,6 +62,18 @@ export const getAdminStats = asyncHandler(
       Parcel.count({
         where: {
           status: "delivered",
+          updatedAt: { [Op.between]: [startOfToday, endOfToday] },
+        },
+      }),
+      Parcel.count({
+        where: {
+          status: "in_transit",
+          updatedAt: { [Op.between]: [startOfToday, endOfToday] },
+        },
+      }),
+      Parcel.count({
+        where: {
+          status: "pending",
           updatedAt: { [Op.between]: [startOfToday, endOfToday] },
         },
       }),
@@ -107,6 +123,8 @@ export const getAdminStats = asyncHandler(
       activeAgents,
       codAmount,
       deliveredToday,
+      transitToday,
+      pendingToday,
       failedDeliveries,
       revenueThisMonth,
       todayRevenue,
@@ -118,47 +136,50 @@ export const getAdminStats = asyncHandler(
   }
 );
 
-export const getUnassignedParcels = asyncHandler(async (req: Request, res: Response) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
-  const offset = (page - 1) * limit;
+export const getUnassignedParcels = asyncHandler(
+  async (req: Request, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
 
-  const cacheKey = `unassigned_parcels_page_${page}_limit_${limit}`;
-  const cached = cache.get(cacheKey);
-  if (cached) {
-    return res.json(new ApiResponse(200, cached, 'Unassigned parcels (cached)'));
-  }
+    const cacheKey = `unassigned_parcels_page_${page}_limit_${limit}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return res.json(
+        new ApiResponse(200, cached, "Unassigned parcels (cached)")
+      );
+    }
 
-  const { rows: parcels, count: totalItems } = await Parcel.findAndCountAll({
-    where: { assignedAgentId: null },
-    order: [['createdAt', 'DESC']],
-    limit,
-    offset,
-    include: [
-      {
-        model: User,
-        as: 'sender',
-        attributes: ['id', 'full_name', 'email', 'role'],
-        where: { role: 'customer' }, 
-        required: false,
+    const { rows: parcels, count: totalItems } = await Parcel.findAndCountAll({
+      where: { assignedAgentId: null },
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+      include: [
+        {
+          model: User,
+          as: "sender",
+          attributes: ["id", "full_name", "email", "role"],
+          where: { role: "customer" },
+          required: false,
+        },
+      ],
+    });
+
+    const result = {
+      parcels: parcels.map((p) => p.toJSON()),
+      pagination: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+        pageSize: limit,
       },
-    ],
-  });
+    };
 
-  const result = {
-    parcels: parcels.map(p => p.toJSON()),
-    pagination: {
-      totalItems,
-      totalPages: Math.ceil(totalItems / limit),
-      currentPage: page,
-      pageSize: limit,
-    },
-  };
-
-  cache.set(cacheKey, result);
-  return res.json(new ApiResponse(200, result, 'Unassigned parcels'));
-});
-
+    cache.set(cacheKey, result);
+    return res.json(new ApiResponse(200, result, "Unassigned parcels"));
+  }
+);
 
 export const assignAgentToParcel = asyncHandler(
   async (req: Request, res: Response) => {
@@ -176,12 +197,14 @@ export const assignAgentToParcel = asyncHandler(
     parcel.status = "assigned";
     await parcel.save();
 
-    const senderCachePrefix = `user_parcels_${parcel.senderId}_`;
-    const keys = cache
-      .keys()
-      .filter((key) => key.startsWith(senderCachePrefix));
-    cache.del(keys);
-    cache.del("admin_bookings");
+    await ParcelTimeline.create({
+      parcelId: parcel.id,
+      status: parcel.status,
+      location: parcel.pickup_address || "Unknown",
+      description: getStatusDescription(parcel.status),
+    });
+
+    cache.flushAll();
 
     return res.json(
       new ApiResponse(200, parcel, "Agent assigned successfully")
@@ -293,68 +316,69 @@ export const exportBookings = asyncHandler(
   }
 );
 
-export const getAllAgents = asyncHandler(async (req: Request, res: Response) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
-  const offset = (page - 1) * limit;
+export const getAllAgents = asyncHandler(
+  async (req: Request, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
 
-  const cacheKey = `agents_page_${page}_limit_${limit}`;
-  const cached = cache.get(cacheKey);
-  if (cached) {
-    return res.json(new ApiResponse(200, cached, 'Agent list (cached)'));
-  }
-
-  const { rows: agents, count: totalItems } = await User.findAndCountAll({
-    where: { role: 'agent' },
-    attributes: ['id', 'full_name', 'email', 'createdAt'],
-    limit,
-    offset,
-    order: [['createdAt', 'DESC']],
-  });
-
-  const agentIds = agents.map(agent => agent.id);
-
-  const allParcels = await Parcel.findAll({
-    where: { assignedAgentId: agentIds },
-    attributes: ['assignedAgentId', 'status'],
-  });
-
-  const statsMap = agentIds.reduce((acc, id) => {
-    acc[id] = { assigned: 0, completed: 0 };
-    return acc;
-  }, {} as Record<string, { assigned: number; completed: number }>);
-
-  allParcels.forEach(parcel => {
-    const agentId = parcel.assignedAgentId as string;
-    if (!agentId || !statsMap[agentId]) return;
-
-    if (parcel.status === 'delivered') {
-      statsMap[agentId].completed++;
-    } else if (parcel.status !== 'cancelled') {
-      statsMap[agentId].assigned++;
+    const cacheKey = `agents_page_${page}_limit_${limit}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return res.json(new ApiResponse(200, cached, "Agent list (cached)"));
     }
-  });
 
-  const enrichedAgents = agents.map(agent => ({
-    ...agent.toJSON(),
-    currentDeliveries: statsMap[agent.id]?.assigned || 0,
-    completedDeliveries: statsMap[agent.id]?.completed || 0,
-  }));
+    const { rows: agents, count: totalItems } = await User.findAndCountAll({
+      where: { role: "agent" },
+      attributes: ["id", "full_name", "email", "createdAt"],
+      limit,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
 
-  const result = {
-    agents: enrichedAgents,
-    pagination: {
-      totalItems,
-      totalPages: Math.ceil(totalItems / limit),
-      currentPage: page,
-      pageSize: limit,
-    },
-  };
+    const agentIds = agents.map((agent) => agent.id);
 
+    const allParcels = await Parcel.findAll({
+      where: { assignedAgentId: agentIds },
+      attributes: ["assignedAgentId", "status"],
+    });
 
-  cache.set(cacheKey, result);
-  return res.json(new ApiResponse(200, result, 'Agent list'));
-});
+    const statsMap = agentIds.reduce((acc, id) => {
+      acc[id] = { assigned: 0, completed: 0 };
+      return acc;
+    }, {} as Record<string, { assigned: number; completed: number }>);
+
+    allParcels.forEach((parcel) => {
+      const agentId = parcel.assignedAgentId as string;
+      if (!agentId || !statsMap[agentId]) return;
+
+      if (parcel.status === "delivered") {
+        statsMap[agentId].completed++;
+      } else if (parcel.status !== "cancelled") {
+        statsMap[agentId].assigned++;
+      }
+    });
+
+    const enrichedAgents = agents.map((agent) => ({
+      ...agent.toJSON(),
+      currentDeliveries: statsMap[agent.id]?.assigned || 0,
+      completedDeliveries: statsMap[agent.id]?.completed || 0,
+    }));
+
+    const result = {
+      agents: enrichedAgents,
+      pagination: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+        pageSize: limit,
+      },
+    };
+
+    cache.set(cacheKey, result);
+    return res.json(new ApiResponse(200, result, "Agent list"));
+  }
+);
 
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
@@ -363,25 +387,26 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
 
   const cacheKey = `users_stats_page_${page}_limit_${limit}`;
   const cached = cache.get(cacheKey);
-  if (cached) return res.json(new ApiResponse(200, cached, 'Users fetched (cached)'));
+  if (cached)
+    return res.json(new ApiResponse(200, cached, "Users fetched (cached)"));
 
   const { rows: users, count: totalItems } = await User.findAndCountAll({
-    attributes: ['id', 'full_name', 'email', 'status', 'role', 'createdAt'],
-    order: [['createdAt', 'DESC']],
+    attributes: ["id", "full_name", "email", "status", "role", "createdAt"],
+    order: [["createdAt", "DESC"]],
     limit,
     offset,
   });
 
-  const userIds = users.map(user => user.id);
+  const userIds = users.map((user) => user.id);
 
   const parcels = await Parcel.findAll({
     where: {
       [Op.or]: [
         { senderId: userIds },
-        { assignedAgentId: userIds, status: 'delivered' }
-      ]
+        { assignedAgentId: userIds, status: "delivered" },
+      ],
     },
-    attributes: ['senderId', 'assignedAgentId', 'status'],
+    attributes: ["senderId", "assignedAgentId", "status"],
   });
 
   const statsMap = userIds.reduce((acc, id) => {
@@ -389,22 +414,27 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
     return acc;
   }, {} as Record<string, { completedDeliveries: number; totalOrders: number }>);
 
-  parcels.forEach(parcel => {
+  parcels.forEach((parcel) => {
     const senderId = parcel.senderId;
     const agentId = parcel.assignedAgentId;
     if (senderId && statsMap[senderId]) statsMap[senderId].totalOrders++;
-    if (parcel.status === 'delivered' && agentId && statsMap[agentId]) {
+    if (parcel.status === "delivered" && agentId && statsMap[agentId]) {
       statsMap[agentId].completedDeliveries++;
     }
   });
 
-  const enrichedUsers = users.map(user => {
-    const stats = statsMap[user.id] || { completedDeliveries: 0, totalOrders: 0 };
+  const enrichedUsers = users.map((user) => {
+    const stats = statsMap[user.id] || {
+      completedDeliveries: 0,
+      totalOrders: 0,
+    };
 
     return {
       ...user.toJSON(),
-      ...(user.role === 'customer' && { totalOrders: stats.totalOrders }),
-      ...(user.role === 'agent' && { completedDeliveries: stats.completedDeliveries }),
+      ...(user.role === "customer" && { totalOrders: stats.totalOrders }),
+      ...(user.role === "agent" && {
+        completedDeliveries: stats.completedDeliveries,
+      }),
     };
   });
 
@@ -419,73 +449,97 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   };
 
   cache.set(cacheKey, result);
-  return res.json(new ApiResponse(200, result, 'Users fetched successfully'));
+  return res.json(new ApiResponse(200, result, "Users fetched successfully"));
 });
 
-export const toggleUserStatus = asyncHandler(async (req: Request, res: Response) => {
-  const { userId } = req.params;
-  const user = await User.findByPk(userId);
-  if (!user) return res.status(404).json(new ApiResponse(404, null, 'User not found'));
-  user.status = user.status === UserStatus.ACTIVE ? UserStatus.DEACTIVATE : UserStatus.ACTIVE;
-  await user.save();
-  cache.flushAll();
-  return res.json(new ApiResponse(200, user, `User ${user.status === 'active' ? 'activated' : 'deactivated'} successfully`));
-});
+export const toggleUserStatus = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const user = await User.findByPk(userId);
+    if (!user)
+      return res.status(404).json(new ApiResponse(404, null, "User not found"));
+    user.status =
+      user.status === UserStatus.ACTIVE
+        ? UserStatus.DEACTIVATE
+        : UserStatus.ACTIVE;
+    await user.save();
+    cache.flushAll();
+    return res.json(
+      new ApiResponse(
+        200,
+        user,
+        `User ${
+          user.status === "active" ? "activated" : "deactivated"
+        } successfully`
+      )
+    );
+  }
+);
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
   const user = await User.findByPk(userId);
-  if (!user) return res.status(404).json(new ApiResponse(404, null, 'User not found'));
+  if (!user)
+    return res.status(404).json(new ApiResponse(404, null, "User not found"));
   await user.destroy();
   cache.flushAll();
-  return res.json(new ApiResponse(200, null, 'User deleted successfully'));
+  return res.json(new ApiResponse(200, null, "User deleted successfully"));
 });
 
-export const getAllBookings = asyncHandler(async (req: Request, res: Response) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
-  const offset = (page - 1) * limit;
+export const getAllBookings = asyncHandler(
+  async (req: Request, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
 
-  const status = req.query.status as string | undefined;
-  const paymentType = req.query.payment_type as string | undefined;
+    const status = req.query.status as string | undefined;
+    const paymentType = req.query.payment_type as string | undefined;
 
-  const cacheKey = `admin_bookings_page_${page}_limit_${limit}_status_${status || 'all'}_payment_${paymentType || 'all'}`;
-  const cached = cache.get(cacheKey);
-  if (cached) return res.json(new ApiResponse(200, cached, 'Bookings fetched (cached)'));
+    const cacheKey = `admin_bookings_page_${page}_limit_${limit}_status_${
+      status || "all"
+    }_payment_${paymentType || "all"}`;
+    const cached = cache.get(cacheKey);
+    if (cached)
+      return res.json(
+        new ApiResponse(200, cached, "Bookings fetched (cached)")
+      );
 
-  const whereClause: any = {};
-  if (status) whereClause.status = status;
-  if (paymentType) whereClause.payment_type = paymentType;
+    const whereClause: any = {};
+    if (status) whereClause.status = status;
+    if (paymentType) whereClause.payment_type = paymentType;
 
-  const { count: totalItems, rows: bookings } = await Parcel.findAndCountAll({
-    where: whereClause,
-    include: [
-      {
-        model: User,
-        as: 'sender',
-        attributes: ['id', 'full_name', 'email', 'status', 'role']
+    const { count: totalItems, rows: bookings } = await Parcel.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: User,
+          as: "sender",
+          attributes: ["id", "full_name", "email", "status", "role"],
+        },
+        {
+          model: User,
+          as: "agent",
+          attributes: ["id", "full_name", "email", "status", "role"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
+
+    const result = {
+      bookings: bookings?.map((b) => b.toJSON()),
+      pagination: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+        pageSize: limit,
       },
-      {
-        model: User,
-        as: 'agent',
-        attributes: ['id', 'full_name', 'email', 'status', 'role']
-      }
-    ],
-    order: [['createdAt', 'DESC']],
-    limit,
-    offset,
-  });
+    };
 
-  const result = {
-    bookings: bookings?.map((b) => b.toJSON()),
-    pagination: {
-      totalItems,
-      totalPages: Math.ceil(totalItems / limit),
-      currentPage: page,
-      pageSize: limit,
-    },
-  };
-
-  cache.set(cacheKey, result);
-  return res.json(new ApiResponse(200, result, 'Bookings fetched successfully'));
-});
+    cache.set(cacheKey, result);
+    return res.json(
+      new ApiResponse(200, result, "Bookings fetched successfully")
+    );
+  }
+);

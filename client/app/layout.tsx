@@ -3,16 +3,17 @@ import './globals.css'
 import { Inter, Noto_Sans } from 'next/font/google';
 import ReactQueryProvider from '@/configs/query-provider';
 import { Toaster } from "sonner"
+import ClientLayout from '@/components/client-layout';
 
 const inter = Inter({
-  subsets: ['latin'], 
-  variable: '--font-inter', 
+  subsets: ['latin'],
+  variable: '--font-inter',
   display: 'swap',
 });
 
 const noto_sans = Noto_Sans({
   subsets: ['latin'],
-  variable: '--font-noto-sans', 
+  variable: '--font-noto-sans',
   display: 'swap',
 });
 
@@ -29,10 +30,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${noto_sans.variable}`}>
       <body>
-        <ReactQueryProvider>
-          {children}
-          <Toaster />
-        </ReactQueryProvider>
+        <ClientLayout>
+          <ReactQueryProvider>
+            {children}
+            <Toaster />
+          </ReactQueryProvider>
+        </ClientLayout>
       </body>
     </html>
   )

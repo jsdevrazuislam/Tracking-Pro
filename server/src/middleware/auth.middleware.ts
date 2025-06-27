@@ -4,7 +4,7 @@ import { User } from "@/models";
 import { NextFunction, Request, Response } from "express";
 import { decode_token } from "@/utils/auth-helper";
 import { JwtResponse } from "@/types/auth";
-import { UserRole } from "@/models/user.models";
+import { UserRole, UserStatus } from "@/models/user.models";
 
 export const verify_auth = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -22,6 +22,7 @@ export const verify_auth = asyncHandler(
       attributes: { exclude: ["password"] },
     });
     if (!user) throw new ApiError(404, "User not found in jwt");
+    if (user?.status !== UserStatus.ACTIVE) throw new ApiError(404, "You can't login. Please contact with admin");
 
     req.user = user?.toJSON();
     next();

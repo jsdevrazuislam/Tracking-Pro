@@ -7,6 +7,7 @@ import {
   generate_access_token,
   hash_password,
 } from "@/utils/auth-helper";
+import { cache } from "@/utils/cache";
 import { Request, Response } from "express";
 
 const options = {
@@ -42,6 +43,8 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   const userWithoutPassword = await User.findByPk(newUser.id, {
     attributes: { exclude: ["password"] },
   });
+
+  cache.flushAll()
 
   return res.cookie("access_token", access_token, options).json(
     new ApiResponse(

@@ -53,3 +53,14 @@ export const assignParcel = async (payload:AssignParcelBooking) => {
   const response = await api.post(ApiStrings.ASSIGN_PARCEL, payload);
   return response.data;
 };
+
+export const changeUserStatus = async (id:string) => {
+  const response = await api.patch(`${ApiStrings.CHANGE_USER_STATUS}/${id}/toggle-status`);
+  return response.data;
+};
+
+export const deleteUser = async (id:string) => {
+  const response = await api.delete(`${ApiStrings.CHANGE_USER_STATUS}/${id}`);
+  return response.data;
+};
+

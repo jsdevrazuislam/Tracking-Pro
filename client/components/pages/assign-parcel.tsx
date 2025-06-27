@@ -1,38 +1,26 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { MapPin, Clock, Search } from "lucide-react"
 import { AdminLayout } from "@/components/admin-layout"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { assignParcel, unAssignParcels } from "@/lib/apis/admin"
+import { useQuery } from "@tanstack/react-query"
+import { unAssignParcels } from "@/lib/apis/admin"
 import { format } from 'date-fns';
 import { IndividualAssignmentModal } from "@/components/individual-assignment-modal"
-import { toast } from "sonner"
+import { TableSkeleton } from "@/components/loading-skeleton"
+import { EmptyState } from "../empty-states"
 
 
 export default function AssignParcels() {
   const [parcels, setParcels] = useState<ParcelsEntity[]>([])
   const [selectedParcels, setSelectedParcels] = useState<string[]>([])
-  const [selectedAgent, setSelectedAgent] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
-  const { isPending, data } = useQuery({
+  const { isLoading, data } = useQuery({
     queryKey: ['unAssignParcels'],
     queryFn: () => unAssignParcels({ page: 1, limit: 10 })
-  })
-
-  const { mutate, isPending: isLoading } = useMutation({
-    mutationFn: assignParcel,
-    onSuccess: (_, variable) => {
-      toast.success(`Successfully assigned parcel ${variable.parcelId}`)
-    },
-    onError: (error) => {
-      toast.error(error?.message)
-    }
   })
 
   const handleParcelSelect = (parcelId: string, checked: boolean) => {
@@ -50,13 +38,7 @@ export default function AssignParcels() {
   )
 
 
-  const handleIndividualAssign = (parcelId: string, agentId: string) => {
-    setParcels((prev) => prev.filter((p) => p.id !== parcelId))
-    mutate({
-      parcelId,
-      agentId
-    })
-  }
+
 
   useEffect(() => {
     setParcels(data?.data?.parcels ?? [])
@@ -90,7 +72,7 @@ export default function AssignParcels() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {filteredParcels.map((parcel) => (
+                {isLoading ? <TableSkeleton rows={5} columns={5} /> : filteredParcels?.length > 0 ? filteredParcels?.map((parcel) => (
                   <div key={parcel.id} className="border rounded-lg p-4">
                     <div className="flex items-start space-x-4">
                       <Checkbox
@@ -122,11 +104,10 @@ export default function AssignParcels() {
                     <div className="mt-2 pt-2 border-t flex justify-end">
                       <IndividualAssignmentModal
                         parcel={parcel}
-                        onAssign={handleIndividualAssign}
                       />
                     </div>
                   </div>
-                ))}
+                )) : <EmptyState type='no-assignments' className=" shadow-none bg-transparent" actionHref="/admin/bookings" />}
               </div>
             </CardContent>
           </Card>

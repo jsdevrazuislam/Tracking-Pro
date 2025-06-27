@@ -6,24 +6,79 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Users, Search, Edit, Trash2, Mail, Phone } from "lucide-react"
+import { Users, Search, Edit, Trash2, Mail } from "lucide-react"
 import { AdminLayout } from "@/components/admin-layout"
-import { useQuery } from "@tanstack/react-query"
-import { getAllUsers } from "@/lib/apis/admin"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { changeUserStatus, getAllUsers } from "@/lib/apis/admin"
 import { format } from "date-fns"
+import { DashboardSkeleton } from "@/components/loading-skeleton"
+import { toast } from "sonner"
 
 
 export default function ManageUsers() {
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
+  const queryClient = useQueryClient()
 
   const { isLoading, data } = useQuery({
     queryKey: ['getAllUsers'],
-    queryFn: () => getAllUsers({ page: 1, limit: 10})
+    queryFn: () => getAllUsers({ page: 1, limit: 10 })
   })
 
   const users = data?.data?.users ?? []
+
+  const { isPending, mutate } = useMutation({
+    mutationFn: changeUserStatus,
+    onSuccess: (_, userId) => {
+      queryClient.setQueryData<UsersResponse>(['getAllUsers'], (oldData) => {
+        if (!oldData || !oldData.data || !oldData.data.users) {
+          return oldData;
+        }
+        const updatedUsers = oldData.data.users.map((user) =>
+          user.id === userId
+            ? { ...user, status: user.status === "active" ? "deactivated" : "active" }
+            : user
+        );
+
+        return {
+          ...oldData,
+          data: {
+            ...oldData.data,
+            users: updatedUsers,
+          },
+        };
+      });
+
+    },
+    onError: (error) => {
+      toast.error(error?.message)
+    }
+  })
+
+  const { isPending: isDeleting, mutate: muFunc } = useMutation({
+    mutationFn: changeUserStatus,
+    onSuccess: (_, userId) => {
+      queryClient.setQueryData<UsersResponse>(['getAllUsers'], (oldData) => {
+        if (!oldData || !oldData.data || !oldData.data.users) {
+          return oldData;
+        }
+        const updatedUsers = oldData.data.users?.filter((u) => u.id !== userId)
+
+        return {
+          ...oldData,
+          data: {
+            ...oldData.data,
+            users: updatedUsers,
+          },
+        };
+      });
+
+    },
+    onError: (error) => {
+      toast.error(error?.message)
+    }
+  })
 
 
   const filteredUsers = users.filter((user) => {
@@ -36,12 +91,12 @@ export default function ManageUsers() {
   })
 
   const toggleUserStatus = (userId: string) => {
-    
+    mutate(userId)
   }
 
   const deleteUser = (userId: string) => {
     if (confirm("Are you sure you want to delete this user?")) {
-      
+      muFunc(userId)
     }
   }
 
@@ -68,6 +123,8 @@ export default function ManageUsers() {
     agents: users.filter((u) => u.role === "agent").length,
     active: users.filter((u) => u.status === "active").length,
   }
+
+  if (isLoading) return <DashboardSkeleton />
 
   return (
     <AdminLayout>
@@ -186,7 +243,7 @@ export default function ManageUsers() {
                     <Badge className={getRoleColor(user.role)}>{user.role.toUpperCase()}</Badge>
                     <Badge className={getStatusColor(user.status)}>{user.status.toUpperCase()}</Badge>
                     <div className="flex space-x-1">
-                      <Button variant="outline" size="sm" onClick={() => toggleUserStatus(user.id)}>
+                      <Button isLoading={isPending} variant="outline" size="sm" onClick={() => toggleUserStatus(user.id)}>
                         {user.status === "active" ? "Deactivate" : "Activate"}
                       </Button>
                       <Button variant="outline" size="sm">
@@ -197,6 +254,7 @@ export default function ManageUsers() {
                         size="sm"
                         onClick={() => deleteUser(user.id)}
                         className="text-red-600 hover:text-red-700"
+                        isLoading={isDeleting}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

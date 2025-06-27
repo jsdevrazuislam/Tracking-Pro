@@ -32,7 +32,7 @@ export function CustomerLayout({ children }: CustomerLayoutProps) {
   const navigation = [
     { name: "Dashboard", href: "/customer/dashboard", icon: Home, badge: null },
     { name: "Book Parcel", href: "/customer/book-parcel", icon: Package, badge: null },
-    { name: "Track Parcel", href: "/customer/track", icon: MapPin, badge: "2" },
+    { name: "Track Parcel", href: "/customer/track", icon: MapPin, badge: null },
     { name: "History", href: "/customer/history", icon: History, badge: null },
   ]
 

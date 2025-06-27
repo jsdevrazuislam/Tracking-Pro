@@ -12,6 +12,7 @@ import { useQueries } from "@tanstack/react-query"
 import { getParcels, getStats } from "@/lib/apis/parcel"
 import { format, addDays } from 'date-fns';
 import { NoParcelEmptyState } from "@/components/empty-states"
+import { DashboardSkeleton } from "@/components/loading-skeleton"
 
 
 const getStatusIcon = (status: string) => {
@@ -65,11 +66,7 @@ export default function CustomerDashboard() {
 
 
     if (isLoading) {
-        return (
-            <CustomerLayout>
-                <div className="flex justify-center items-center h-full">Loading dashboard data...</div>
-            </CustomerLayout>
-        );
+        return <DashboardSkeleton />
     }
 
     if (isError) {

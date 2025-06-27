@@ -14,6 +14,7 @@ import { AdminLayout } from "@/components/admin-layout"
 import { useQuery } from '@tanstack/react-query'
 import { getAllBookings } from '@/lib/apis/admin'
 import { format } from 'date-fns';
+import { TrackingSkeleton } from '@/components/loading-skeleton'
 
 
 
@@ -102,7 +103,7 @@ const AdminBookingList = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {filteredBookings.map((booking) => (
+                        {isLoading ? <TrackingSkeleton /> : filteredBookings.map((booking) => (
                             <div
                                 key={booking.id}
                                 className="group p-6 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-300 bg-white"

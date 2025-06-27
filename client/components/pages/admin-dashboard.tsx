@@ -24,6 +24,7 @@ import api from "@/lib/api"
 import ApiStrings from "@/lib/api-strings"
 import { saveAs } from 'file-saver'
 import { toast } from "sonner"
+import { DashboardSkeleton } from "@/components/loading-skeleton"
 
 
 export default function AdminDashboard() {
@@ -51,6 +52,9 @@ export default function AdminDashboard() {
       setLoading(false)
     }
   }
+
+  if(isPending) return <DashboardSkeleton />
+
   return (
     <AdminLayout>
       <div className="space-y-8">
@@ -81,7 +85,7 @@ export default function AdminDashboard() {
               <Package className="h-5 w-5 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-900">{dashboardData?.dailyBookings}</div>
+              <div className="text-3xl font-bold text-blue-900">{dashboardData?.dailyBookings ?? 0}</div>
               <p className="text-xs text-blue-600 flex items-center mt-1">
                 <TrendingUp className="h-3 w-3 mr-1" />
                 +12% from yesterday
@@ -95,7 +99,7 @@ export default function AdminDashboard() {
               <Truck className="h-5 w-5 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-900">{dashboardData?.activeAgents}</div>
+              <div className="text-3xl font-bold text-green-900">{dashboardData?.activeAgents ?? 0}</div>
               <p className="text-xs text-green-600 mt-1">
                  online now
               </p>
@@ -109,7 +113,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-purple-900">
-                ${dashboardData?.codAmount.toLocaleString()}
+                ${dashboardData?.codAmount?.toLocaleString() ?? 0}
               </div>
               <p className="text-xs text-purple-600 mt-1">Pending collection</p>
             </CardContent>
@@ -121,7 +125,7 @@ export default function AdminDashboard() {
               <AlertTriangle className="h-5 w-5 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-red-900">{dashboardData?.failedDeliveries}</div>
+              <div className="text-3xl font-bold text-red-900">{dashboardData?.failedDeliveries ?? 0}</div>
               <p className="text-xs text-red-600 mt-1">Requires attention</p>
             </CardContent>
           </Card>
@@ -146,12 +150,12 @@ export default function AdminDashboard() {
                 </div>
                 <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-200">
                   <Clock className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                  <div className="text-2xl font-bold text-blue-900">15</div>
+                  <div className="text-2xl font-bold text-blue-900">{dashboardData?.transitToday}</div>
                   <div className="text-sm text-blue-600">In Transit</div>
                 </div>
                 <div className="text-center p-4 bg-orange-50 rounded-xl border border-orange-200">
                   <Package className="h-8 w-8 mx-auto mb-2 text-orange-600" />
-                  <div className="text-2xl font-bold text-orange-900">7</div>
+                  <div className="text-2xl font-bold text-orange-900">{dashboardData?.pendingToday}</div>
                   <div className="text-sm text-orange-600">Pending</div>
                 </div>
               </div>

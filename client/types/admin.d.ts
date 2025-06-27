@@ -13,6 +13,8 @@ interface Stats {
   activeAgents: string;
   codAmount: number;
   deliveredToday: number;
+  transitToday: number
+  pendingToday: number
   failedDeliveries: number;
   revenueThisMonth: number;
   todayRevenue: number;

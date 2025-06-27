@@ -19,7 +19,7 @@ export const getParcels = async ({ page = 1, limit = 10 }): Promise<ParcelRespon
   return response.data;
 };
 
-export const trackParcel = async (id:string) =>{
-  const response = await api.get(`${ApiStrings.TRACK_PARCEL}/${id}`);
+export const trackParcel = async (id:string): Promise<TrackResponse> =>{
+  const response = await api.get<TrackResponse>(`${ApiStrings.TRACK_PARCEL}/${id}`);
   return response.data;
 }
