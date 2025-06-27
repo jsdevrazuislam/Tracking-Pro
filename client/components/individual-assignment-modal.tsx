@@ -17,6 +17,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { assignParcel, getActiveAgents } from "@/lib/apis/admin"
 import { toast } from "sonner"
 import { TableSkeleton } from "@/components/loading-skeleton"
+import { useTranslation } from "@/hooks/use-translation"
 
 
 interface IndividualAssignmentModalProps {
@@ -28,6 +29,7 @@ export function IndividualAssignmentModal({ parcel }: IndividualAssignmentModalP
     const [searchTerm, setSearchTerm] = useState("")
     const [isOpen, setIsOpen] = useState(false)
     const queryClient = useQueryClient()
+    const { t } = useTranslation()
     const { isLoading, data } = useQuery({
         queryKey: ['getActiveAgents'],
         queryFn: () => getActiveAgents({ page: 1, limit: 10 })
@@ -79,13 +81,13 @@ export function IndividualAssignmentModal({ parcel }: IndividualAssignmentModalP
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger className=" cursor-pointer" asChild>
                 <Button size="sm" variant="outline" className="text-xs">
-                    Quick Assign
+                    {t('quickAssign')}
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto ">
                 <DialogHeader>
-                    <DialogTitle>Assign Parcel to Agent</DialogTitle>
-                    <DialogDescription>Select an available agent to assign this parcel</DialogDescription>
+                    <DialogTitle>{t('assignParcelToAgent')}</DialogTitle>
+                    <DialogDescription>{t('selectAvailableAgent')}</DialogDescription>
                 </DialogHeader>
 
                 <div className="border rounded-lg p-4 bg-gray-50">
@@ -94,13 +96,13 @@ export function IndividualAssignmentModal({ parcel }: IndividualAssignmentModalP
                         <Badge className={getPriorityColor(parcel?.status)}>{parcel?.status?.toUpperCase()}</Badge>
                     </div>
                     <div className="text-sm text-gray-600 space-y-1">
-                        <div>Customer: {parcel?.sender?.full_name}</div>
+                        <div>{t('customer')}: {parcel?.sender?.full_name}</div>
                         <div className="flex items-center">
                             <MapPin className="h-3 w-3 mr-1" />
                             {parcel?.pickup_address?.place_name} → {parcel?.receiver_address?.place_name}
                         </div>
                         <div className="flex justify-between">
-                            <span>Weight: {parcel?.parcel_size} Kg</span>
+                            <span>{t('weight')}: {parcel?.parcel_size} {t('kg')}</span>
                             <span className="font-medium">${parcel?.amount}</span>
                         </div>
                     </div>

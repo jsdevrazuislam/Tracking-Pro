@@ -331,7 +331,7 @@ export const getAllAgents = asyncHandler(
 
     const { rows: agents, count: totalItems } = await User.findAndCountAll({
       where: { role: "agent" },
-      attributes: ["id", "full_name", "email", "createdAt"],
+      attributes: USER_ATTRIBUTE,
       limit,
       offset,
       order: [["createdAt", "DESC"]],

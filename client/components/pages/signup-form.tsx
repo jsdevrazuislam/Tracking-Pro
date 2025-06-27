@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/store"
 import { useMutation } from "@tanstack/react-query"
 import { registerUser } from "@/lib/apis/auth"
 import { toast } from "sonner"
+import { useTranslation } from "@/hooks/use-translation"
 
 const registerSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
@@ -54,6 +55,7 @@ export async function getPlaceNameFromCoordinates(latitude: number, longitude: n
 export default function SignupForm() {
     const router = useRouter()
     const { setLogin } = useAuthStore()
+    const { t } = useTranslation()
 
 
     const {
@@ -162,11 +164,11 @@ export default function SignupForm() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm font-medium">
-                    Full Name
+                    {t('fullName')}
                 </Label>
                 <Input
                     id="name"
-                    placeholder="Enter your full name"
+                    placeholder={t('enterYourFullEmail')}
                     {...register("full_name")}
                     className="h-11"
                     error={errors?.full_name?.message}
@@ -174,12 +176,12 @@ export default function SignupForm() {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
-                    Email Address
+                    {t('emailAddress')}
                 </Label>
                 <Input
                     id="email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t('enterYourEmail')}
                     {...register("email")}
                     error={errors?.email?.message}
                     className="h-11"
@@ -187,12 +189,12 @@ export default function SignupForm() {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium">
-                    Password
+                    {t('password')}
                 </Label>
                 <Input
                     id="password"
                     type="password"
-                    placeholder="Create a password"
+                    placeholder={t('enterYourPassword')}
                     {...register("password")}
                     error={errors?.password?.message}
                     className="h-11"
@@ -200,12 +202,12 @@ export default function SignupForm() {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="phone" className="text-sm font-medium">
-                    Phone Number
+                    {t('phoneNumber')}
                 </Label>
                 <Input
                     id="phone"
                     type="text"
-                    placeholder="Example: 01739402788"
+                    placeholder={t('examplePhoneNumber')}
                     {...register("phone")}
                     error={errors?.phone?.message}
                     className="h-11"
@@ -213,14 +215,14 @@ export default function SignupForm() {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="role" className="text-sm font-medium">
-                    Account Type
+                    {t('accountType')}
                 </Label>
                 <Controller
                     name='role'
                     control={control}
                     render={({ field }) => (
                         <Select value={field.value} onValueChange={field.onChange}>
-                            <SelectTrigger error={errors?.role?.message} className="h-11">
+                            <SelectTrigger id='role' error={errors?.role?.message} className="h-11">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react"
 import { debounce } from "lodash"
 import { ControllerRenderProps } from "react-hook-form"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/hooks/use-translation"
 
 interface MapboxFeature {
   place_name: string
@@ -21,14 +22,16 @@ interface Props {
   error?: string
   query:string
   setQuery: React.Dispatch<string>
+  id?:string
 
 }
 
-export default function MapboxAddressInput({ field, label, error, setQuery, query }: Props) {
+export default function MapboxAddressInput({ field, label, error, setQuery, query, id}: Props) {
   const [results, setResults] = useState<MapboxFeature[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [loading, setLoading] = useState(false)
   const wrapperRef = useRef<HTMLDivElement | null>(null)
+  const { t } = useTranslation()
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -68,7 +71,7 @@ export default function MapboxAddressInput({ field, label, error, setQuery, quer
 
   return (
     <div className="space-y-2" ref={wrapperRef}>
-      <Label>{label}</Label>
+      <Label htmlFor={id}>{label}</Label>
       <div className="relative">
         <Input
           value={query}
@@ -78,7 +81,8 @@ export default function MapboxAddressInput({ field, label, error, setQuery, quer
             field.onChange(value)
             setShowDropdown(true)
           }}
-          placeholder="Search for a location"
+          id={id}
+          placeholder={t('searchForALocation')}
           onFocus={() => {
             if (results.length > 0) setShowDropdown(true)
           }}

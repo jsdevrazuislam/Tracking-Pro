@@ -109,7 +109,7 @@ interface Pagination {
   status: string;
   assignedAgentId: string;
   tracking_code: string;
-  current_location?: null;
+  current_location?: LocationOrReceiverAddressOrPickupAddress | null;
   createdAt: string;
   updatedAt: string;
   agent: User;

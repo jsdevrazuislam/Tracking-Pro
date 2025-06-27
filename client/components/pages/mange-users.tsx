@@ -12,6 +12,8 @@ import { changeUserStatus, getAllUsers } from "@/lib/apis/admin"
 import { format } from "date-fns"
 import { DashboardSkeleton } from "@/components/loading-skeleton"
 import { toast } from "sonner"
+import { useTranslation } from "@/hooks/use-translation"
+import { EmptyState } from "@/components/empty-states"
 
 
 export default function ManageUsers() {
@@ -19,6 +21,7 @@ export default function ManageUsers() {
   const [roleFilter, setRoleFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
 
   const { isLoading, data } = useQuery({
     queryKey: ['getAllUsers'],
@@ -131,15 +134,15 @@ export default function ManageUsers() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Manage Users</h1>
-          <p className="text-gray-600">Manage customers, agents, and their accounts</p>
+          <h1 className="text-3xl font-bold">{t('manageUsers')}</h1>
+          <p className="text-gray-600">{t('manageUsersAccountsPermissions')}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalUsers')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -148,7 +151,7 @@ export default function ManageUsers() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Customers</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('customers')}</CardTitle>
             <Users className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -157,7 +160,7 @@ export default function ManageUsers() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Agents</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('agents')}</CardTitle>
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
@@ -166,7 +169,7 @@ export default function ManageUsers() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('activeUsers')}</CardTitle>
             <Users className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
@@ -180,8 +183,8 @@ export default function ManageUsers() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>All Users</CardTitle>
-              <CardDescription>Manage user accounts and permissions</CardDescription>
+              <CardTitle>{t('allUsers')}</CardTitle>
+              <CardDescription>{t('manageUserAccounts')}</CardDescription>
             </div>
             <div className="flex space-x-2">
               <div className="relative">
@@ -218,7 +221,7 @@ export default function ManageUsers() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredUsers.map((user) => (
+            {filteredUsers?.length > 0 ?  filteredUsers?.map((user) => (
               <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
@@ -246,9 +249,6 @@ export default function ManageUsers() {
                     <Button isLoading={isPending} variant="outline" size="sm" onClick={() => toggleUserStatus(user.id)}>
                       {user.status === "active" ? "Deactivate" : "Activate"}
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4" />
-                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -261,7 +261,7 @@ export default function ManageUsers() {
                   </div>
                 </div>
               </div>
-            ))}
+            )): <EmptyState type="no-users" className="shadow-none bg-transparent" />}
           </div>
         </CardContent>
       </Card>

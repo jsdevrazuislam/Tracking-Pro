@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { IndividualAssignmentModal } from "@/components/individual-assignment-modal"
 import { TableSkeleton } from "@/components/loading-skeleton"
 import { EmptyState } from "../empty-states"
+import { useTranslation } from "@/hooks/use-translation"
 
 
 export default function AssignParcels() {
@@ -21,6 +22,7 @@ export default function AssignParcels() {
     queryKey: ['unAssignParcels'],
     queryFn: () => unAssignParcels({ page: 1, limit: 10 })
   })
+  const { t } = useTranslation()
 
   const handleParcelSelect = (parcelId: string, checked: boolean) => {
     if (checked) {
@@ -46,16 +48,16 @@ export default function AssignParcels() {
   return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Assign Parcels</h1>
-          <p className="text-gray-600">Assign unassigned parcels to available delivery agents</p>
+          <h1 className="text-3xl font-bold">{t('assignParcels')}</h1>
+          <p className="text-gray-600">{t('parcelsForPickupDelivery')}</p>
         </div>
         <div className="w-full space-y-6">
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Unassigned Parcels ({filteredParcels.length})</CardTitle>
-                  <CardDescription>Select parcels to assign to agents</CardDescription>
+                  <CardTitle>{t('unassignedParcels')} ({filteredParcels.length})</CardTitle>
+                  <CardDescription>{t('selectParcelsToAssign')}</CardDescription>
                 </div>
                 <div className="relative">
                   <Search className="h-4 w-4 absolute z-10 left-3 top-3 text-gray-400" />
@@ -83,18 +85,18 @@ export default function AssignParcels() {
                           <div className="font-medium">{parcel.tracking_code}</div>
                         </div>
                         <div className="text-sm text-gray-600 space-y-1">
-                          <div>Customer: {parcel?.sender?.full_name}</div>
+                          <div>{t('customer')}: {parcel?.sender?.full_name}</div>
                           <div className="flex items-center">
                             <MapPin className="h-3 w-3 mr-1" />
                             {parcel?.pickup_address?.place_name} → {parcel?.receiver_address?.place_name}
                           </div>
                           <div className="flex items-center justify-between">
-                            <span>Weight: {parcel?.parcel_size} Kg</span>
+                            <span>{t("weight")}: {parcel?.parcel_size} {t('kg')}</span>
                             <span className="font-medium">${parcel.amount}</span>
                           </div>
                           <div className="flex items-center text-xs text-gray-500">
                             <Clock className="h-3 w-3 mr-1" />
-                            Created: {format(new Date(parcel.createdAt), 'yyyy-MM-dd')}
+                            {t('created')}: {format(new Date(parcel.createdAt), 'yyyy-MM-dd')}
                           </div>
                         </div>
                       </div>
@@ -105,7 +107,7 @@ export default function AssignParcels() {
                       />
                     </div>
                   </div>
-                )) : <EmptyState type='no-assignments' className=" shadow-none bg-transparent" actionHref="/admin/bookings" />}
+                )) : <EmptyState type='no-assignments' className="shadow-none bg-transparent" actionHref="/admin/bookings" />}
               </div>
             </CardContent>
           </Card>

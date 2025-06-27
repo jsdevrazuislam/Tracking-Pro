@@ -10,6 +10,8 @@ import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuthStore } from "@/store/store"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "@/hooks/use-translation"
+import { LanguageSwitcher } from "@/components/language-switcher"
 
 interface DashboardLayoutProps {
     children: React.ReactNode
@@ -22,23 +24,6 @@ type NavItem = {
     badge?: string | null
 }
 
-const navByRole: Record<string, NavItem[]> = {
-    admin: [
-        { name: "Dashboard", href: "/admin/dashboard", icon: Home },
-        { name: "Assign Parcels", href: "/admin/assign-parcels", icon: Package },
-        { name: "Manage Users", href: "/admin/manage-users", icon: Users },
-        { name: "View Bookings", href: "/admin/bookings", icon: BarChart3 },
-    ],
-    agent: [
-        { name: "Dashboard", href: "/agent/dashboard", icon: Home },
-    ],
-    customer: [
-        { name: "Dashboard", href: "/customer/dashboard", icon: Home },
-        { name: "Book Parcel", href: "/customer/book-parcel", icon: Package },
-        { name: "Track Parcel", href: "/customer/track", icon: MapPin },
-        { name: "History", href: "/customer/history", icon: History },
-    ],
-}
 
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
@@ -47,12 +32,31 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const { user, logout } = useAuthStore()
     const queryClient = useQueryClient()
+    const { t } = useTranslation()
 
     const handleLogout = () => {
         logout()
         queryClient.clear()
         router.push("/")
     }
+
+    const navByRole: Record<string, NavItem[]> = {
+    admin: [
+        { name: t('dashboard'), href: "/admin/dashboard", icon: Home },
+        { name: t('assignParcels'), href: "/admin/assign-parcels", icon: Package },
+        { name: t('manageUsers'), href: "/admin/manage-users", icon: Users },
+        { name: t('viewBookings'), href: "/admin/bookings", icon: BarChart3 },
+    ],
+    agent: [
+        { name: t('dashboard'), href: "/agent/dashboard", icon: Home },
+    ],
+    customer: [
+        { name: t('dashboard'), href: "/customer/dashboard", icon: Home },
+        { name: t('bookParcel'), href: "/customer/book-parcel", icon: Package },
+        { name: t('trackParcel'), href: "/customer/track", icon: MapPin },
+        { name: t('history'), href: "/customer/history", icon: History },
+    ],
+}
 
     const navigation = useMemo(() => {
         const role = user?.role || "agent"
@@ -105,8 +109,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                                     <Truck className="h-6 w-6 text-white" />
                                                 </div>
                                                 <div>
-                                                    <h2 className="font-bold text-lg capitalize">{user?.role} Portal</h2>
-                                                    <p className="text-sm text-gray-600">Parcel Management</p>
+                                                    <h2 className="font-bold text-lg capitalize">{user?.role} {t('portal')}</h2>
+                                                    <p className="text-sm text-gray-600">{t('parcelManagement')}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -120,7 +124,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                                 className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
                                             >
                                                 <LogOut className="h-4 w-4 mr-2" />
-                                                Logout
+                                                {t('logout')}
                                             </Button>
                                         </div>
                                     </div>
@@ -132,14 +136,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                     <Truck className="h-6 w-6 text-white" />
                                 </div>
                                 <div className="hidden sm:block">
-                                    <h1 className="text-xl font-bold text-gray-900 capitalize">{user?.role} Portal</h1>
-                                    <p className="text-xs text-gray-600">Parcel Management</p>
+                                    <h1 className="text-xl font-bold text-gray-900 capitalize">{user?.role} {t('portal')}</h1>
+                                    <p className="text-xs text-gray-600">{t('parcelManagement')}</p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="flex items-center space-x-4">
-
 
                             <Button variant="ghost" size="sm" className="relative">
                                 <Bell className="h-5 w-5" />
@@ -147,10 +150,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                     2
                                 </Badge>
                             </Button>
-
+                            <LanguageSwitcher />
                             <Button variant="outline" size="sm" onClick={handleLogout} className="hidden sm:flex">
                                 <LogOut className="h-4 w-4 mr-2" />
-                                Logout
+                                {t('logout')}
                             </Button>
                         </div>
                     </div>

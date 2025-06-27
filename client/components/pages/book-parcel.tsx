@@ -16,6 +16,7 @@ import { bookParcel } from "@/lib/apis/parcel"
 import { toast } from "sonner"
 import MapboxAddressInput from "@/components/ui/autocomplete-input"
 import { useState } from "react"
+import { useTranslation } from "@/hooks/use-translation"
 
 
 const parcelBookingSchema = z.object({
@@ -55,6 +56,7 @@ export default function BookParcel() {
     const router = useRouter()
     const [query, setQuery] = useState("")
     const [queryDeliver, setQueryDeliver] = useState("")
+    const { t } = useTranslation()
     const {
         register,
         handleSubmit,
@@ -107,8 +109,8 @@ export default function BookParcel() {
     return (
             <div className="max-w-4xl mx-auto space-y-6">
                 <div>
-                    <h1 className="text-3xl font-bold">Book New Parcel</h1>
-                    <p className="text-gray-600">Fill in the details to book your parcel for pickup and delivery</p>
+                    <h1 className="text-3xl font-bold">{t('bookNewParcel')}</h1>
+                    <p className="text-gray-600">{t('fillDetailsBookParcel')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="grid lg:grid-cols-3 gap-6">
@@ -117,9 +119,9 @@ export default function BookParcel() {
                             <CardHeader>
                                 <CardTitle className="flex items-center">
                                     <MapPin className="h-5 w-5 mr-2 text-green-600" />
-                                    Pickup Details
+                                    {t('pickupDetails')}
                                 </CardTitle>
-                                <CardDescription>Where should we pick up your parcel?</CardDescription>
+                                <CardDescription>{t('whereToPickUp')}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="w-full">
@@ -129,10 +131,11 @@ export default function BookParcel() {
                                         render={({ field }) => (
                                             <MapboxAddressInput
                                                 field={field}
-                                                label="Pickup Address"
+                                                label={t('pickupAddress')}
                                                 error={errors.pickup_address?.message}
                                                 query={query}
                                                 setQuery={setQuery}
+                                                id="pickup_address"
                                             />
                                         )}
                                     />
@@ -144,9 +147,9 @@ export default function BookParcel() {
                             <CardHeader>
                                 <CardTitle className="flex items-center">
                                     <MapPin className="h-5 w-5 mr-2 text-blue-600" />
-                                    Delivery Details
+                                    {t('deliveryDetails')}
                                 </CardTitle>
-                                <CardDescription>Where should we deliver your parcel?</CardDescription>
+                                <CardDescription>{t('whereToDeliver')}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="w-full">
@@ -155,7 +158,7 @@ export default function BookParcel() {
                                         control={control}
                                         render={({ field }) => (
                                             <MapboxAddressInput query={queryDeliver}
-                                                setQuery={setQueryDeliver} field={field} label="Delivery Address" error={errors.receiver_address?.message} />
+                                                setQuery={setQueryDeliver} field={field} label={t('deliveryAddress')} error={errors.receiver_address?.message} id="receiver_address" />
                                         )}
                                     />
                                 </div>
@@ -167,14 +170,14 @@ export default function BookParcel() {
                             <CardHeader>
                                 <CardTitle className="flex items-center">
                                     <Package className="h-5 w-5 mr-2 text-purple-600" />
-                                    Parcel Details
+                                    {t('parcelDetails')}
                                 </CardTitle>
-                                <CardDescription>Tell us about your parcel</CardDescription>
+                                <CardDescription>{t('tellUsAboutParcel')}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="grid md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="parcelType">Parcel Type</Label>
+                                        <Label htmlFor="parcelType">{t('parcelType')}</Label>
                                         <Select
                                             onValueChange={(value) => setValue('parcel_type', value as ParcelBookingInputs['parcel_type'], { shouldValidate: true })}
                                             value={formData.parcel_type}
@@ -193,7 +196,7 @@ export default function BookParcel() {
                                         </Select>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="weight">Parcel Weight (kg)</Label>
+                                        <Label htmlFor="weight">{t('parcelWeightKg')}</Label>
                                         <Input
                                             id="weight"
                                             type="number"
@@ -213,23 +216,23 @@ export default function BookParcel() {
                             <CardHeader>
                                 <CardTitle className="flex items-center">
                                     <CreditCard className="h-5 w-5 mr-2" />
-                                    Payment & Summary
+                                    {t('paymentSummary')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-3">
-                                    <Label>Payment Mode</Label>
+                                    <Label>{t('paymentMode')}</Label>
                                     <RadioGroup
                                         onValueChange={(value) => setValue('payment_type', value as ParcelBookingInputs['payment_type'], { shouldValidate: true })}
                                         value={formData.payment_type}
                                     >
                                         <div className="flex items-center space-x-2">
                                             <RadioGroupItem value="prepaid" id="prepaid" />
-                                            <Label htmlFor="prepaid">Prepaid</Label>
+                                            <Label htmlFor="prepaid">{t('prepaid')}</Label>
                                         </div>
                                         <div className="flex items-center space-x-2">
                                             <RadioGroupItem value="cod" id="cod" />
-                                            <Label htmlFor="cod">Cash on Delivery (COD)</Label>
+                                            <Label htmlFor="cod">{t('cashOnDelivery')}</Label>
                                         </div>
                                     </RadioGroup>
                                     {errors.payment_type && (
@@ -239,11 +242,11 @@ export default function BookParcel() {
 
                                 <div className="border-t pt-4 space-y-2">
                                     <div className="flex justify-between text-sm">
-                                        <span>Base Price</span>
+                                        <span>{t("basePrice")}</span>
                                         <span>$15.00</span>
                                     </div>
                                     <div className="border-t pt-2 flex justify-between font-medium">
-                                        <span>Total</span>
+                                        <span>{t('total')}</span>
                                         <span>${calculatePrice().toFixed(2)}</span>
                                     </div>
                                 </div>
@@ -251,12 +254,12 @@ export default function BookParcel() {
                                 <div className="pt-4 space-y-2">
                                     <div className="flex items-center text-sm text-gray-600">
                                         <Calendar className="h-4 w-4 mr-2" />
-                                        <span>Estimated Delivery: 1-2 business days</span>
+                                        <span>{t('estimatedDeliveryDays')}</span>
                                     </div>
                                 </div>
 
                                 <Button isLoading={isPending} type="submit" className="w-full" size="lg">
-                                    Book Parcel - ${calculatePrice().toFixed(2)}
+                                    {t('bookParcel')} - ${calculatePrice().toFixed(2)}
                                 </Button>
                             </CardContent>
                         </Card>

@@ -12,6 +12,7 @@ import { getParcels, getStats } from "@/lib/apis/parcel"
 import { format, addDays } from 'date-fns';
 import { NoParcelEmptyState } from "@/components/empty-states"
 import { DashboardSkeleton } from "@/components/loading-skeleton"
+import { useTranslation } from "@/hooks/use-translation"
 
 
 const getStatusIcon = (status: string) => {
@@ -62,6 +63,7 @@ export default function CustomerDashboard() {
 
     const stats = statsQuery.data;
     const parcels = parcelsQuery.data?.data?.parcels ?? [];
+    const { t } = useTranslation()
 
 
     if (isLoading) {
@@ -82,9 +84,9 @@ export default function CustomerDashboard() {
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                     <div className="space-y-2">
                         <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                            Welcome back, {user?.full_name}! 👋
+                            {t('welcomeBack')}, {user?.full_name}! 👋
                         </h1>
-                        <p className="text-lg text-gray-600">Manage your parcels and track deliveries in real-time</p>
+                        <p className="text-lg text-gray-600">{t('manageTrackDeliveries')}</p>
                     </div>
                     <Link href="/customer/book-parcel">
                         <Button
@@ -92,7 +94,7 @@ export default function CustomerDashboard() {
                             className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                         >
                             <Plus className="h-5 w-5 mr-2" />
-                            Book New Parcel
+                            {t('bookNewParcel')}
                         </Button>
                     </Link>
                 </div>
@@ -101,45 +103,45 @@ export default function CustomerDashboard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4  gap-6">
                     <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all duration-300">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-blue-700">Total Parcels</CardTitle>
+                            <CardTitle className="text-sm font-medium text-blue-700">{t('totalParcels')}</CardTitle>
                             <Package className="h-5 w-5 text-blue-600" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-bold text-blue-900">{stats?.data?.total}</div>
-                            <p className="text-xs text-blue-600 mt-1">All time</p>
+                            <p className="text-xs text-blue-600 mt-1">{t('allTime')}</p>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all duration-300">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-green-700">Delivered</CardTitle>
+                            <CardTitle className="text-sm font-medium text-green-700">{t("delivered")}</CardTitle>
                             <CheckCircle className="h-5 w-5 text-green-600" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-bold text-green-900">{stats?.data?.delivered}</div>
-                            <p className="text-xs text-green-600 mt-1">Successfully completed</p>
+                            <p className="text-xs text-green-600 mt-1">{t('successfullyCompleted')}</p>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 hover:shadow-lg transition-all duration-300">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-orange-700">In Transit</CardTitle>
+                            <CardTitle className="text-sm font-medium text-orange-700">{t('inTransit')}</CardTitle>
                             <Clock className="h-5 w-5 text-orange-600" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-bold text-orange-900">{stats?.data?.inTransit}</div>
-                            <p className="text-xs text-orange-600 mt-1">On the way</p>
+                            <p className="text-xs text-orange-600 mt-1">{t('onTheWay')}</p>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all duration-300">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-purple-700">Pending</CardTitle>
+                            <CardTitle className="text-sm font-medium text-purple-700">{t('pending')}</CardTitle>
                             <AlertCircle className="h-5 w-5 text-purple-600" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-bold text-purple-900">{stats?.data?.pending}</div>
-                            <p className="text-xs text-purple-600 mt-1">Awaiting pickup</p>
+                            <p className="text-xs text-purple-600 mt-1">{t("awaitingPickup")}</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -150,13 +152,13 @@ export default function CustomerDashboard() {
                         <CardHeader>
                             <CardTitle className="flex items-center text-lg">
                                 <Package className="h-5 w-5 mr-2 text-blue-600" />
-                                Quick Book
+                                {t('quickBook')}
                             </CardTitle>
-                            <CardDescription>Book a parcel for immediate pickup</CardDescription>
+                            <CardDescription>{t('bookParcelImmediatePickup')}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Link href="/customer/book-parcel">
-                                <Button className="w-full bg-blue-600 hover:bg-blue-700">Book Now</Button>
+                                <Button className="w-full bg-blue-600 hover:bg-blue-700">{t('bookNow')}</Button>
                             </Link>
                         </CardContent>
                     </Card>
@@ -165,14 +167,14 @@ export default function CustomerDashboard() {
                         <CardHeader>
                             <CardTitle className="flex items-center text-lg">
                                 <MapPin className="h-5 w-5 mr-2 text-green-600" />
-                                Track Parcel
+                                {t('trackParcel')}
                             </CardTitle>
-                            <CardDescription>Enter tracking ID to track your parcel</CardDescription>
+                            <CardDescription>{t('enterTrackingIdPrompt')}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Link href="/customer/track">
                                 <Button variant="outline" className="w-full border-green-200 text-green-700 hover:bg-green-50">
-                                    Track Now
+                                    {t('trackNow')}
                                 </Button>
                             </Link>
                         </CardContent>
@@ -182,13 +184,13 @@ export default function CustomerDashboard() {
                         <CardHeader>
                             <CardTitle className="flex items-center text-lg">
                                 <Calendar className="h-5 w-5 mr-2 text-purple-600" />
-                                Schedule Pickup
+                                {t('schedulePickup')}
                             </CardTitle>
-                            <CardDescription>Schedule a pickup for later</CardDescription>
+                            <CardDescription>{t('schedulePickupLater')}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Button variant="outline" className="w-full border-purple-200 text-purple-700 hover:bg-purple-50">
-                                Schedule
+                                {t('schedule')}
                             </Button>
                         </CardContent>
                     </Card>
@@ -199,12 +201,12 @@ export default function CustomerDashboard() {
                     <CardHeader>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
-                                <CardTitle className="text-2xl font-bold">Recent Parcels</CardTitle>
-                                <CardDescription className="text-base">Your latest parcel bookings and their status</CardDescription>
+                                <CardTitle className="text-2xl font-bold">{t('recentParcels')}</CardTitle>
+                                <CardDescription className="text-base">{t('latestParcelBookingsStatus')}</CardDescription>
                             </div>
                             <Link href="/customer/history">
                                 <Button variant="outline" className="flex items-center">
-                                    View All
+                                    {t('viewAllParcels')}
                                     <TrendingUp className="h-4 w-4 ml-2" />
                                 </Button>
                             </Link>
@@ -234,19 +236,19 @@ export default function CustomerDashboard() {
                                                     <div className="flex items-start">
                                                         <MapPin className="h-4 w-4 mt-0.5 mr-2 flex-shrink-0 text-green-600" />
                                                         <div>
-                                                            <div className="font-medium">From: {parcel?.pickup_address?.place_name}</div>
-                                                            <div className="font-medium">To: {parcel?.receiver_address?.place_name}</div>
+                                                            <div className="font-medium">{t('from')}: {parcel?.pickup_address?.place_name}</div>
+                                                            <div className="font-medium">{t('to')}: {parcel?.receiver_address?.place_name}</div>
                                                         </div>
                                                     </div>
 
                                                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 pt-2">
                                                         <div className="flex items-center">
                                                             <Calendar className="h-4 w-4 mr-1 text-gray-400" />
-                                                            <span>Created: {format(new Date(parcel.createdAt), 'yyyy-MM-dd')}</span>
+                                                            <span>{t('created')}: {format(new Date(parcel.createdAt), 'yyyy-MM-dd')}</span>
                                                         </div>
                                                         <div className="flex items-center">
                                                             <Clock className="h-4 w-4 mr-1 text-gray-400" />
-                                                            <span>Est. Delivery: {format(addDays(new Date(parcel.createdAt), 2), 'yyyy-MM-dd')}</span>
+                                                            <span>{t('estDelivery')}: {format(addDays(new Date(parcel.createdAt), 2), 'yyyy-MM-dd')}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -273,7 +275,7 @@ export default function CustomerDashboard() {
                                                     className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-300"
                                                 >
                                                     <MapPin className="h-4 w-4 mr-1" />
-                                                    Track
+                                                    {t('trackNow')}
                                                 </Button>
                                             </Link>
                                         </div>
