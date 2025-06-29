@@ -79,14 +79,15 @@ export default function TrackParcel() {
 
     useEffect(() => {
         if (!socket) return
-        socket.on(SocketEventEnum.CHANGE_STATUS, (data: TimelineEntity) => {
+        socket.on(SocketEventEnum.CHANGE_STATUS, (data: { data: TimelineEntity}) => {
             setTrackingData(prevData => {
                 if (!prevData) {
                     return null;
                 }
                 return {
                     ...prevData,
-                    timeline: prevData.timeline ? [...prevData.timeline, data] : [data]
+                    status: data?.data?.status,
+                    timeline: prevData.timeline ? [...prevData.timeline, data?.data] : [data?.data]
                 };
             });
         });
