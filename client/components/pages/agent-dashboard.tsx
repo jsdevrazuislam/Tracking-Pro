@@ -13,6 +13,7 @@ import RouteOptimizerMap from "@/components/optimize-route-map"
 import { toast } from "sonner"
 import Pagination from "@/components/pagination"
 import { useTranslation } from "@/hooks/use-translation"
+import { EmptyState } from "@/components/empty-states"
 
 const getStatusIcon = (status: string) => {
   switch (status) {
@@ -189,7 +190,7 @@ export default function AgentDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {parcels?.map((parcel) => (
+            {parcels?.length > 0 ?  parcels?.map((parcel) => (
               <div key={parcel.id} className="border rounded-lg p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -255,7 +256,7 @@ export default function AgentDashboard() {
                   </div>
                 </div>
               </div>
-            ))}
+            )) : <EmptyState type="no-deliveries" className="shadow-none bg-transparent"  />}
             {
               parcels.length > 0 &&
               <Pagination

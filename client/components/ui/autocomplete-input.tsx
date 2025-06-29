@@ -7,6 +7,7 @@ import { debounce } from "lodash"
 import { ControllerRenderProps } from "react-hook-form"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/use-translation"
+import axios from "axios"
 
 interface MapboxFeature {
   place_name: string
@@ -51,12 +52,8 @@ export default function MapboxAddressInput({ field, label, error, setQuery, quer
 
     setLoading(true)
     try {
-      const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
-      const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(search)}.json?access_token=${token}&limit=5`
-      )
-      const data = await res.json()
-      setResults(data.features || [])
+      const { data } = await axios(`/api/mapbox/autocomplete?q=${encodeURIComponent(query)}`)
+      setResults(data || [])
     } catch (err) {
       console.error("Mapbox API error", err)
       setResults([])
@@ -84,7 +81,7 @@ export default function MapboxAddressInput({ field, label, error, setQuery, quer
           id={id}
           placeholder={t('searchForALocation')}
           onFocus={() => {
-            if (results.length > 0) setShowDropdown(true)
+            if (results?.length > 0) setShowDropdown(true)
           }}
         />
 
@@ -92,10 +89,10 @@ export default function MapboxAddressInput({ field, label, error, setQuery, quer
           <div className="absolute z-50 mt-1 w-full bg-white border rounded-md shadow-sm max-h-60 overflow-auto">
             {loading ? (
               <div className="p-3 text-sm text-muted-foreground">Searching...</div>
-            ) : results.length === 0 ? (
+            ) : results?.length === 0 ? (
               <div className="p-3 text-sm text-muted-foreground">No results found</div>
             ) : (
-              results.map((place, idx) => (
+              results?.map((place, idx) => (
                 <div
                   key={idx}
                   onClick={() => {

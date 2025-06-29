@@ -193,5 +193,11 @@ export default {
     "delivery": "ডেলিভারি",
     "confirmPickup": "পিকআপ নিশ্চিত করুন",
     "confirmDelivery": "ডেলিভারি নিশ্চিত করুন",
-    "scanAnotherParcel": "অন্য পার্সেল স্ক্যান করুন"
+    "scanAnotherParcel": "অন্য পার্সেল স্ক্যান করুন",
+     "noParcelsFound": "কোনো পার্সেল পাওয়া যায়নি",
+    "bookYourFirstParcel": "আপনি এখনো কোনো পার্সেল বুক করেননি। আপনার প্রথম পার্সেল বুক করে শুরু করুন!",
+    "trackExisting": "বিদ্যমান ট্র্যাক করুন",
+    "noAssignedDeliveries": "কোনো অ্যাসাইন করা ডেলিভারি নেই",
+    "checkBackOrContactSupervisor": "আপনার কাছে এখনো কোনো ডেলিভারি অ্যাসাইন করা হয়নি। পরে আবার চেক করুন অথবা আপনার সুপারভাইজারের সাথে যোগাযোগ করুন।",
+    "refresh": "রিফ্রেশ"
 };

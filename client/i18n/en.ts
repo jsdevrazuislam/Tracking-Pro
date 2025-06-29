@@ -193,5 +193,11 @@ export default {
     "delivery": "Delivery",
     "confirmPickup": "Confirm Pickup",
     "confirmDelivery": "Confirm Delivery",
-    "scanAnotherParcel": "Scan Another Parcel"
+    "scanAnotherParcel": "Scan Another Parcel",
+    "noParcelsFound": "No Parcels Found",
+    "bookYourFirstParcel": "You haven't booked any parcels yet. Start by booking your first parcel!",
+    "trackExisting": "Track Existing",
+    "noAssignedDeliveries": "No Assigned Deliveries",
+    "checkBackOrContactSupervisor": "You don't have any deliveries assigned yet. Check back later or contact your supervisor.",
+    "refresh": "Refresh"
 };

@@ -13,6 +13,8 @@ import { useMutation } from "@tanstack/react-query"
 import { registerUser } from "@/lib/apis/auth"
 import { toast } from "sonner"
 import { useTranslation } from "@/hooks/use-translation"
+import axios from "axios"
+import { useState } from "react"
 
 const registerSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
@@ -21,41 +23,31 @@ const registerSchema = z.object({
     phone: z.string()
         .length(11, { message: "Phone number must be exactly 11 digits." })
         .regex(/^(013|014|015|016|017|018|019)\d{8}$/, { message: "Invalid Bangladeshi phone number. Must start with 013-019 and be 11 digits long." }),
-    role: z.string()
+    role: z.string(),
+    location: z.object({
+            place_name: z.string().min(10, { message: "Receiver address name must be at least 10 characters." }).max(255, { message: "Receiver address name is too long." }),
+            lat: z.number().min(-90, "Latitude must be between -90 and 90.").max(90, "Latitude must be between -90 and 90."),
+            long: z.number().min(-180, "Longitude must be between -180 and 180.").max(180, "Longitude must be between -180 and 180."),
+        }, { message: "Receiver address is required and must include name, latitude, and longitude." }).optional(),
 });
 
 type SignupFormInputs = z.infer<typeof registerSchema>;
 
-export async function getPlaceNameFromCoordinates(latitude: number, longitude: number): Promise<string | null> {
-        const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-
-        if (!MAPBOX_ACCESS_TOKEN) {
-            console.error("Mapbox Access Token is not set.");
-            return null;
-        }
-
-        const apiUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${MAPBOX_ACCESS_TOKEN}&country=bd&limit=1`;
-
-        try {
-            const response = await fetch(apiUrl);
-            const data = await response.json();
-
-            if (data && data.features && data.features.length > 0) {
-                return data.features[0].place_name;
-            } else {
-                console.warn("No place name found for these coordinates.");
-                return null;
-            }
-        } catch (error) {
-            console.error("Error fetching place name from Mapbox:", error);
-            return null;
-        }
+export const getPlaceNameFromCoordinates = async (latitude: number, longitude: number) => {
+    try {
+        const { data } = await axios.post('/api/mapbox/place', { latitude, longitude });
+        return data.place_name;
+    } catch (error) {
+        throw new Error('Failed to fetch place name');
     }
+};
+
 
 export default function SignupForm() {
     const router = useRouter()
     const { setLogin } = useAuthStore()
     const { t } = useTranslation()
+    const [loading, setLoading] = useState(false)
 
 
     const {
@@ -123,16 +115,18 @@ export default function SignupForm() {
             return;
         }
 
+        setLoading(true)
         try {
             const position: GeolocationPosition = await new Promise((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
                     enableHighAccuracy: true,
-                    timeout: 5000,
+                    timeout: 10000,
                     maximumAge: 0
                 });
             });
 
             const { latitude, longitude } = position.coords;
+            const place_name = await getPlaceNameFromCoordinates(latitude, longitude)
 
             mutate({
                 email: data.email,
@@ -143,19 +137,14 @@ export default function SignupForm() {
                 location: {
                     latitude,
                     longitude,
-                    place_name: await getPlaceNameFromCoordinates(latitude, longitude)
+                    place_name
                 },
             });
 
-        } catch (error: any) {
-            if (error.code === error.PERMISSION_DENIED) {
-                toast.error("Location permission is required to sign up. Please enable location services for this site.");
-            } else if (error.code === error.TIMEOUT) {
-                toast.error("Could not get your location. Please try again.");
-            } else {
-                toast.error(`Failed to get location: ${error.message || "Unknown error."}`);
-            }
-            console.error("Geolocation error:", error);
+        } catch (error) {
+            console.log("Geolocation error:", error);
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -237,7 +226,7 @@ export default function SignupForm() {
             <Button
                 type="submit"
                 className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium"
-                isLoading={isPending}
+                isLoading={loading ||  isPending}
             >
                 Create Account
             </Button>

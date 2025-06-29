@@ -76,7 +76,7 @@ export default function RouteOptimizerMap({ parcels }: { parcels: ParcelsEntity[
           </Marker>
         ))}
 
-        {routeCoords.length > 0 && (
+        {routeCoords?.length > 0 && (
           <Source id="route" type="geojson" data={routeGeoJson}>
             <Layer
               id="route-line"

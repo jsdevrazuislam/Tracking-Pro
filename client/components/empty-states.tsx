@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useTranslation } from "@/hooks/use-translation"
 import { Package, Search, History, Users, Truck, BarChart3, MapPin, RefreshCw, AlertCircle, CheckCircle, Settings, Bell} from 'lucide-react'
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface EmptyStateProps {
   type: string
@@ -39,9 +40,9 @@ export function EmptyState({
       case "no-parcels":
         return {
           icon: Package,
-          title: title || "No Parcels Found",
-          description: description || "You haven't booked any parcels yet. Start by booking your first parcel!",
-          actionLabel: actionLabel || "Book New Parcel",
+          title: title || t('noParcelsFound'),
+          description: description ||t('bookYourFirstParcel'),
+          actionLabel: actionLabel || t('bookNewParcel'),
           actionHref: actionHref || "/customer/book-parcel",
           gradient: "from-blue-50 to-purple-50",
           iconColor: "text-blue-500",
@@ -137,10 +138,10 @@ export function EmptyState({
       case "no-deliveries":
         return {
           icon: Truck,
-          title: title || "No Assigned Deliveries",
+          title: title || t('noAssignedDeliveries'),
           description:
-            description || "You don't have any deliveries assigned yet. Check back later or contact your supervisor.",
-          actionLabel: actionLabel || "Refresh",
+            description || t('checkBackOrContactSupervisor'),
+          actionLabel: actionLabel || t('refresh'),
           gradient: "from-orange-50 to-yellow-50",
           iconColor: "text-orange-500",
           iconBg: "bg-orange-100",
@@ -279,13 +280,17 @@ export function EmptyState({
 }
 
 export function NoParcelEmptyState({ className }: { className?: string }) {
+  
+  const router = useRouter()
+
   return (
     <EmptyState
       type="no-parcels"
       className={className}
       showSecondaryAction={true}
+      actionHref="/customer/book-parcel"
       secondaryActionLabel="Track Existing"
-      onSecondaryAction={() => (window.location.href = "/customer/track")}
+      onSecondaryAction={() => router.push('/track')}
     />
   )
 }

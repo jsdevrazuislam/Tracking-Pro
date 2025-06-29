@@ -225,7 +225,7 @@ export default function CustomerDashboard() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-6">
-                        {parcels.length === 0 ? <NoParcelEmptyState className="shadow-none bg-transparent" /> : parcels?.map((parcel) => (
+                        {parcels.length === 0 ? <NoParcelEmptyState className="shadow-none bg-transparent"  /> : parcels?.map((parcel) => (
                             <div
                                 key={parcel.id}
                                 className="group p-6 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-300 bg-white"

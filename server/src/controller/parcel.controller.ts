@@ -333,7 +333,7 @@ export const updateParcelStatus = asyncHandler(async (req: Request, res: Respons
     parcel?.sender?.email,
     parcel?.sender?.full_name,
     { customer_name: parcel?.sender?.full_name, year: new Date().getFullYear(), tracking_code: parcel?.tracking_code, status:parcel?.status, tracking_url: `${process.env.CLIENT_URL}/customer/track?tracking_code=${parcel?.tracking_code}` },
-    9
+    12
   );
 
   cache.flushAll();
