@@ -199,5 +199,9 @@ export default {
     "trackExisting": "বিদ্যমান ট্র্যাক করুন",
     "noAssignedDeliveries": "কোনো অ্যাসাইন করা ডেলিভারি নেই",
     "checkBackOrContactSupervisor": "আপনার কাছে এখনো কোনো ডেলিভারি অ্যাসাইন করা হয়নি। পরে আবার চেক করুন অথবা আপনার সুপারভাইজারের সাথে যোগাযোগ করুন।",
-    "refresh": "রিফ্রেশ"
+    "refresh": "রিফ্রেশ",
+    "liveTrackingMap": "লাইভ ট্র্যাকিং ম্যাপ",
+    "connectingToLiveTracking": "লাইভ ট্র্যাকিংয়ের সাথে সংযোগ করা হচ্ছে...",
+    "approximately": "গন্তব্য থেকে প্রায়",
+    "kmFromDestination":"কিমি দূরে"
 };

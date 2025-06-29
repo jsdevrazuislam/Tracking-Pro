@@ -4,13 +4,11 @@ import { useAuthStore } from "@/store/store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getPlaceNameFromCoordinates } from "@/components/pages/signup-form"
-import { useRequestPermissions } from "@/hooks/use-request-permissions";
 
 
 export default function ReactQueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
   const { initialLoading, user, setCurrentLocation } = useAuthStore()
-  useRequestPermissions()
 
   useEffect(() => {
     initialLoading()

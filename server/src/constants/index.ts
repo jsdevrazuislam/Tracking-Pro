@@ -8,6 +8,7 @@ const SocketEventEnum = Object.freeze({
   PARCEL_LOCATION: "PARCEL_LOCATION",
   AGENT_JOIN: "AGENT_JOIN",
   JOIN_CLIENT_PARCEL: "JOIN_CLIENT_PARCEL",
+  CHANGE_STATUS: "CHANGE_STATUS",
 });
 
 const USER_ATTRIBUTE = ["id", "full_name", "email", "phone", "location", "status", "role", "createdAt"]

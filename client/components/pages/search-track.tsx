@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,8 @@ import LiveTrackingMap from "@/components/live-tracking-map"
 import { Badge } from "@/components/ui/badge"
 import { useTranslation } from "@/hooks/use-translation"
 import { useSearchParams } from "next/navigation"
+import { useSocketStore } from "@/store/socket-store"
+import { SocketEventEnum } from "@/constants"
 
 const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -37,6 +39,7 @@ export default function TrackParcel() {
     const [trackingId, setTrackingId] = useState(params.get('tracking_code') ?? '')
     const [trackingData, setTrackingData] = useState<TrackParcelData | null | undefined>(null)
     const { t } = useTranslation()
+    const { socket } = useSocketStore()
 
     const { mutate, isPending, reset } = useMutation({
         mutationFn: trackParcel,
@@ -73,6 +76,25 @@ export default function TrackParcel() {
                 return systemStatus.replace(/_/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
         }
     }
+
+    useEffect(() => {
+        if (!socket) return
+        socket.on(SocketEventEnum.CHANGE_STATUS, (data: TimelineEntity) => {
+            setTrackingData(prevData => {
+                if (!prevData) {
+                    return null;
+                }
+                return {
+                    ...prevData,
+                    timeline: prevData.timeline ? [...prevData.timeline, data] : [data]
+                };
+            });
+        });
+
+        return () => {
+            socket.off(SocketEventEnum.CHANGE_STATUS);
+        };
+    }, [socket])
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-in">
@@ -235,26 +257,28 @@ export default function TrackParcel() {
                         </div>
 
                         <div className="space-y-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center">
-                                        <User className="h-5 w-5 mr-2" />
-                                        {t('deliveryAgent')}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div>
-                                        <div className="font-medium">{trackingData?.agent?.full_name}</div>
-                                        <div className="text-sm text-gray-600">{t('assignedAgent')}</div>
-                                    </div>
-                                    <Link href={`tel:${trackingData?.agent?.phone}`}>
-                                        <Button variant="outline" className="w-full">
-                                            <Phone className="h-4 w-4 mr-2" />
-                                            {t('callAgent')}
-                                        </Button>
-                                    </Link>
-                                </CardContent>
-                            </Card>
+                            {
+                                trackingData?.agent && <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center">
+                                            <User className="h-5 w-5 mr-2" />
+                                            {t('deliveryAgent')}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div>
+                                            <div className="font-medium">{trackingData?.agent?.full_name}</div>
+                                            <div className="text-sm text-gray-600">{t('assignedAgent')}</div>
+                                        </div>
+                                        <Link href={`tel:${trackingData?.agent?.phone}`}>
+                                            <Button variant="outline" className="w-full">
+                                                <Phone className="h-4 w-4 mr-2" />
+                                                {t('callAgent')}
+                                            </Button>
+                                        </Link>
+                                    </CardContent>
+                                </Card>
+                            }
 
                             <Card>
                                 <CardHeader>

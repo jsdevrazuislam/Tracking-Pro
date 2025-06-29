@@ -10,7 +10,7 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
-    allowedDevOrigins: ['http://192.168.1.101:3000', 'http://192.168.8.76:3000'],
+    allowedDevOrigins: ['http://192.168.1.104:3000', 'http://192.168.8.76:3000'],
   },
 }
 

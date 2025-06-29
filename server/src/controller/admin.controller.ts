@@ -11,7 +11,8 @@ import PDFDocument from "pdfkit";
 import { UserStatus } from "@/models/user.models";
 import { ParcelTimeline } from "@/models/parcel-timeline.models";
 import { getStatusDescription } from "@/utils/helper";
-import { USER_ATTRIBUTE } from "@/constants";
+import { SocketEventEnum, USER_ATTRIBUTE } from "@/constants";
+import { emitSocketEvent } from "@/socket";
 
 export const getAdminStats = asyncHandler(
   async (req: Request, res: Response) => {
@@ -198,12 +199,14 @@ export const assignAgentToParcel = asyncHandler(
     parcel.status = "assigned";
     await parcel.save();
 
-    await ParcelTimeline.create({
+    const newStatus = await ParcelTimeline.create({
       parcelId: parcel.id,
       status: parcel.status,
       location: parcel.pickup_address || "Unknown",
       description: getStatusDescription(parcel.status),
     });
+
+    emitSocketEvent({ req, roomId: parcel.id, event: SocketEventEnum.CHANGE_STATUS, payload: { data: newStatus?.toJSON() } })
 
     cache.flushAll();
 

@@ -1,4 +1,4 @@
-import { USER_ATTRIBUTE } from "@/constants";
+import { SocketEventEnum, USER_ATTRIBUTE } from "@/constants";
 import { User } from "@/models";
 import { ParcelTimeline } from "@/models/parcel-timeline.models";
 import { Parcel } from "@/models/parcel.models";
@@ -15,6 +15,7 @@ import { Op, fn, col, literal, QueryTypes } from "sequelize";
 import sequelize from "@/config/db";
 import { sendEmail } from "@/utils/email";
 import sizeOf from "image-size";
+import { emitSocketEvent } from "@/socket";
 
 
 
@@ -320,13 +321,15 @@ export const updateParcelStatus = asyncHandler(async (req: Request, res: Respons
   parcel.updatedAt = new Date();
   await parcel.save();
 
-  await ParcelTimeline.create({
+  const newStatus = await ParcelTimeline.create({
     parcelId: parcel.id,
     status,
     location: current_location || "Unknown",
     timestamp: new Date(),
     description: `Status updated to ${status} by agent`,
   });
+
+  emitSocketEvent({ req, roomId: parcel.id, event: SocketEventEnum.CHANGE_STATUS, payload: { data: newStatus?.toJSON() } })
 
   await sendEmail(
     "We need to verify your email address",

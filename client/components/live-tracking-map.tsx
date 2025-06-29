@@ -5,6 +5,7 @@ import { Truck, MapPin } from 'lucide-react';
 import { useSocketStore } from '@/store/socket-store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { SocketEventEnum } from '@/constants';
+import { useTranslation } from '@/hooks/use-translation';
 
 
 
@@ -18,6 +19,7 @@ export default function LiveTrackingMap({ trackingData }: { trackingData: TrackP
     const [liveLocation, setLiveLocation] = useState<LiveLocation | null>(null);
     const [distance, setDistance] = useState<number | null>(null);
     const { socket } = useSocketStore()
+    const { t } = useTranslation()
 
     useEffect(() => {
 
@@ -54,12 +56,12 @@ export default function LiveTrackingMap({ trackingData }: { trackingData: TrackP
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Live Tracking Map</CardTitle>
+                <CardTitle>{t('liveTrackingMap')}</CardTitle>
                 <CardDescription>
                     {distance ? (
-                        `Approximately ${distance.toFixed(1)} km from destination`
+                        `${t('approximately')} ${distance.toFixed(1)} ${t('kmFromDestination')}`
                     ) : (
-                        'Connecting to live tracking...'
+                        t('connectingToLiveTracking')
                     )}
                 </CardDescription>
             </CardHeader>

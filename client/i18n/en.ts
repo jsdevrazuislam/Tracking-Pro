@@ -199,5 +199,9 @@ export default {
     "trackExisting": "Track Existing",
     "noAssignedDeliveries": "No Assigned Deliveries",
     "checkBackOrContactSupervisor": "You don't have any deliveries assigned yet. Check back later or contact your supervisor.",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "liveTrackingMap": "Live Tracking Map",
+    "connectingToLiveTracking": "Connecting to live tracking...",
+    "approximately": "Approximately",
+    "kmFromDestination":"km from destination"
 };
