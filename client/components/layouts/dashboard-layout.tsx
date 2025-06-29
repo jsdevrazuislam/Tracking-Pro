@@ -41,22 +41,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
 
     const navByRole: Record<string, NavItem[]> = {
-    admin: [
-        { name: t('dashboard'), href: "/admin/dashboard", icon: Home },
-        { name: t('assignParcels'), href: "/admin/assign-parcels", icon: Package },
-        { name: t('manageUsers'), href: "/admin/manage-users", icon: Users },
-        { name: t('viewBookings'), href: "/admin/bookings", icon: BarChart3 },
-    ],
-    agent: [
-        { name: t('dashboard'), href: "/agent/dashboard", icon: Home },
-        { name: t('scan'), href: "/agent/scan", icon: ScanBarcode },
-    ],
-    customer: [
-        { name: t('dashboard'), href: "/customer/dashboard", icon: Home },
-        { name: t('bookParcel'), href: "/customer/book-parcel", icon: Package },
-        { name: t('trackParcel'), href: "/customer/track", icon: MapPin },
-    ],
-}
+        admin: [
+            { name: t('dashboard'), href: "/admin/dashboard", icon: Home },
+            { name: t('assignParcels'), href: "/admin/assign-parcels", icon: Package },
+            { name: t('manageUsers'), href: "/admin/manage-users", icon: Users },
+            { name: t('viewBookings'), href: "/admin/bookings", icon: BarChart3 },
+        ],
+        agent: [
+            { name: t('dashboard'), href: "/agent/dashboard", icon: Home },
+            { name: t('scan'), href: "/agent/scan", icon: ScanBarcode },
+        ],
+        customer: [
+            { name: t('dashboard'), href: "/customer/dashboard", icon: Home },
+            { name: t('bookParcel'), href: "/customer/book-parcel", icon: Package },
+            { name: t('trackParcel'), href: "/customer/track", icon: MapPin },
+        ],
+    }
 
     const navigation = useMemo(() => {
         const role = user?.role || "agent"
@@ -86,7 +86,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             })}
         </nav>
     )
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             {/* Header */}

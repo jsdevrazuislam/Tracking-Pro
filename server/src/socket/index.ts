@@ -89,10 +89,10 @@ const initializeSocketIO = ({ io }: InitializeSocketIOOptions): void => {
 
       socket.on(
         SocketEventEnum.PARCEL_LOCATION,
-        (data: { parcelId: string; lat: number; lng: number }) => {
-          io.to(data.parcelId).emit(SocketEventEnum.PARCEL_LOCATION, {
-            latitude: data.lat,
-            longitude: data.lng,
+        (data: { trackingId: string; coords: number[] }) => {
+          io.to(data.trackingId).emit(SocketEventEnum.PARCEL_LOCATION, {
+            latitude: data.coords[1],
+            longitude: data.coords[0],
             timestamp: new Date().toISOString(),
           });
         }
