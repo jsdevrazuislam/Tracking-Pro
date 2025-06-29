@@ -7,16 +7,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SocketEventEnum } from '@/constants';
 
 
+
+interface LiveLocation {
+    latitude: number;
+    longitude: number;
+    timestamp: string;
+}
+
 export default function LiveTrackingMap({ trackingData }: { trackingData: TrackParcelData }) {
-    const [location, setLocation] = useState<number[] | null>(null)
+    const [liveLocation, setLiveLocation] = useState<LiveLocation | null>(null);
+    const [distance, setDistance] = useState<number | null>(null);
     const { socket } = useSocketStore()
 
     useEffect(() => {
 
         if (!socket) return
         socket.emit(SocketEventEnum.JOIN_CLIENT_PARCEL, trackingData.id);
-        socket.on(SocketEventEnum.PARCEL_LOCATION, (coords: number[]) => {
-            setLocation(coords);
+        socket.on(SocketEventEnum.PARCEL_LOCATION, (data: LiveLocation) => {
+            setLiveLocation(data);
+            calculateDistance(data);
         });
 
         return () => {
@@ -25,12 +34,33 @@ export default function LiveTrackingMap({ trackingData }: { trackingData: TrackP
         };
     }, [socket, trackingData]);
 
+    const calculateDistance = (location: LiveLocation) => {
+        if (!trackingData.receiver_address) return;
+
+        const R = 6371;
+        const dLat = (location.latitude - trackingData.receiver_address.lat) * Math.PI / 180;
+        const dLon = (location.longitude - trackingData.receiver_address.long) * Math.PI / 180;
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(trackingData.receiver_address.lat * Math.PI / 180) *
+            Math.cos(location.latitude * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c;
+
+        setDistance(distance);
+    };
+
     return (
         <Card>
             <CardHeader>
                 <CardTitle>Live Tracking Map</CardTitle>
                 <CardDescription>
-                    Connecting to live tracking...
+                    {distance ? (
+                        `Approximately ${distance.toFixed(1)} km from destination`
+                    ) : (
+                        'Connecting to live tracking...'
+                    )}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -102,21 +132,23 @@ export default function LiveTrackingMap({ trackingData }: { trackingData: TrackP
                     </Marker>
 
                     {/* Live Agent Marker */}
-                    {(location || trackingData.agent?.location) && (
+                    {(liveLocation || trackingData.agent?.location) && (
                         <Marker
-                            latitude={location?.[0] || trackingData.agent?.location.latitude}
-                            longitude={location?.[1] || trackingData.agent?.location.longitude}
+                            latitude={liveLocation?.latitude || trackingData.agent?.location.latitude}
+                            longitude={liveLocation?.longitude || trackingData.agent?.location.longitude}
                             anchor="bottom"
                         >
                             <div className="relative group">
                                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-md animate-pulse">
                                     <Truck className="w-4 h-4" />
                                 </div>
-                               {
-                                location &&  <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white px-2 py-1 rounded shadow text-xs opacity-0 group-hover:opacity-100 transition">
-                                    Agent location
+                                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white px-2 py-1 rounded shadow text-xs opacity-0 group-hover:opacity-100 transition">
+                                    {liveLocation ? (
+                                        `Last update: ${new Date(liveLocation.timestamp).toLocaleTimeString()}`
+                                    ) : (
+                                        'Agent location'
+                                    )}
                                 </div>
-                               }
                             </div>
                         </Marker>
                     )}
