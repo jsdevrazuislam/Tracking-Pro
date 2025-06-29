@@ -17,6 +17,15 @@ export class Parcel extends Model {
     public assignedAgentId!:string
     public tracking_code!:string
     public current_location!:string
+    public sender!:{
+        full_name:string
+        phone:string
+        email:string
+    }
+    public agent!:{
+        full_name:string
+        phone:string
+    }
     public amount!:number
     public updatedAt!:Date
  }

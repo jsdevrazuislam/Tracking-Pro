@@ -111,11 +111,11 @@ export const getAdminStats = asyncHandler(
 
     const growthRate = yesterdayBookings
       ? parseFloat(
-          (
-            ((dailyBookings - yesterdayBookings) / yesterdayBookings) *
-            100
-          ).toFixed(2)
-        )
+        (
+          ((dailyBookings - yesterdayBookings) / yesterdayBookings) *
+          100
+        ).toFixed(2)
+      )
       : 0;
 
     const stats = {
@@ -191,8 +191,8 @@ export const assignAgentToParcel = asyncHandler(
       User.findOne({ where: { id: agentId, role: "agent" } }),
     ]);
 
-    if (!parcel) throw new Error("Parcel not found");
-    if (!agent) throw new Error("Agent not found or invalid role");
+    if (!parcel) throw new ApiError(404, "Parcel not found");
+    if (!agent) throw new ApiError(404, "Agent not found or invalid role");
 
     parcel.assignedAgentId = agentId;
     parcel.status = "assigned";
@@ -215,69 +215,57 @@ export const assignAgentToParcel = asyncHandler(
 
 export const exportBookings = asyncHandler(
   async (req: Request, res: Response) => {
-    const format = req.query.format || "csv";
-    const bookings = await Parcel.findAll({ order: [["createdAt", "DESC"]] });
+    const format = (req.query.format as string) || "csv";
+    const bookings = await Parcel.findAll({
+      include: [
+        { model: User, as: "sender", attributes: USER_ATTRIBUTE },
+        { model: User, as: "agent", attributes: USER_ATTRIBUTE },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
 
     if (format === "pdf") {
       try {
         const doc = new PDFDocument({ margin: 50 });
+        const filename = `bookings_${new Date().toISOString().split("T")[0]}.pdf`;
 
-        const filename = `bookings_${
-          new Date().toISOString().split("T")[0]
-        }.pdf`;
-        res.setHeader(
-          "Content-Disposition",
-          `attachment; filename="${filename}"`
-        );
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
         res.setHeader("Content-Type", "application/pdf");
 
         doc.pipe(res);
 
-        doc
-          .fontSize(20)
-          .text("Parcel Bookings Report", { align: "center" })
-          .moveDown();
+        doc.fontSize(20).text("Parcel Bookings Report", { align: "center" }).moveDown();
+        doc.fontSize(10).text(`Generated on: ${new Date().toLocaleString()}`, {
+          align: "right",
+        }).moveDown(2);
 
-        doc
-          .fontSize(10)
-          .text(`Generated on: ${new Date().toLocaleString()}`, {
-            align: "right",
-          })
-          .moveDown(2);
-
-        const startY = 150;
-        let y = startY;
-
-        doc
-          .font("Helvetica-Bold")
-          .text("#", 50, y)
-          .text("Tracking Code", 70, y)
-          .text("Pickup", 200, y)
-          .text("Delivery", 350, y)
-          .text("Status", 500, y)
-          .moveDown();
+        let y = 150;
+        doc.font("Helvetica-Bold")
+          .text("#", 40, y)
+          .text("Tracking", 60, y)
+          .text("Pickup", 150, y)
+          .text("Delivery", 260, y)
+          .text("Status", 370, y)
+          .text("Customer", 450, y)
+          .text("Agent", 530, y);
 
         y += 20;
         doc.font("Helvetica");
 
         bookings.forEach((p, idx) => {
-          if (y > 700) {
+          if (y > 750) {
             doc.addPage();
             y = 50;
           }
 
           doc
-            .text(`${idx + 1}`, 50, y)
-            .text(p.tracking_code, 70, y)
-            .text(p.pickup_address?.place_name || "N/A", 200, y, {
-              width: 150,
-              ellipsis: true,
-            })
-            .text(p.receiver_address?.place_name || "N/A", 350, y, {
-              width: 150,
-              ellipsis: true,
-            })
-            .text(p.status, 500, y);
+            .text(`${idx + 1}`, 40, y)
+            .text(p.tracking_code, 60, y)
+            .text(p.pickup_address?.place_name || "-", 150, y, { width: 100 })
+            .text(p.receiver_address?.place_name || "-", 260, y, { width: 100 })
+            .text(p.status, 370, y)
+            .text(p.sender?.full_name || "-", 450, y, { width: 70 })
+            .text(p.agent?.full_name || "-", 530, y, { width: 70 });
 
           y += 20;
         });
@@ -291,29 +279,41 @@ export const exportBookings = asyncHandler(
         });
       }
     } else {
-      const fields = [
-        "tracking_code",
-        "pickup_address.place_name",
-        "receiver_address.place_name",
-        "status",
-        "payment_type",
-        "amount",
-      ];
-      const parser = new Parser({ fields });
-      const csv = parser.parse(
-        bookings.map((p) => ({
-          tracking_code: p.tracking_code,
-          "pickup_address.place_name": p.pickup_address?.place_name,
-          "receiver_address.place_name": p.receiver_address?.place_name,
-          status: p.status,
-          payment_type: p.payment_type,
-          amount: p.amount,
-        }))
-      );
-      res.header("Content-Type", "text/csv");
-      res.attachment("bookings.csv");
-      return res.send(csv);
+      try {
+        const fields = [
+          "tracking_code",
+          "pickup",
+          "delivery",
+          "status",
+          "payment",
+          "amount",
+          "customer",
+          "agent",
+        ];
+
+        const parser = new Parser({ fields });
+        const csv = parser.parse(
+          bookings.map((p) => ({
+            tracking_code: p.tracking_code,
+            "pickup": p.pickup_address?.place_name,
+            "delivery": p.receiver_address?.place_name,
+            status: p.status,
+            payment: p.payment_type,
+            amount: p.amount,
+            "customer": p.sender?.full_name || "-",
+            "agent": p.agent?.full_name || "-",
+          }))
+        );
+
+        res.header("Content-Type", "text/csv");
+        res.attachment("bookings.csv");
+        return res.send(csv);
+      } catch (err) {
+        console.error("CSV export error:", err);
+        res.status(500).json({ message: "CSV generation failed" });
+      }
     }
+
   }
 );
 
@@ -457,8 +457,7 @@ export const toggleUserStatus = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId } = req.params;
     const user = await User.findByPk(userId);
-    if (!user)
-      return res.status(404).json(new ApiResponse(404, null, "User not found"));
+    if (!user) throw new ApiError(404, 'User not found')
     user.status =
       user.status === UserStatus.ACTIVE
         ? UserStatus.DEACTIVATE
@@ -469,8 +468,7 @@ export const toggleUserStatus = asyncHandler(
       new ApiResponse(
         200,
         user,
-        `User ${
-          user.status === "active" ? "activated" : "deactivated"
+        `User ${user.status === "active" ? "activated" : "deactivated"
         } successfully`
       )
     );
@@ -480,8 +478,7 @@ export const toggleUserStatus = asyncHandler(
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
   const user = await User.findByPk(userId);
-  if (!user)
-    return res.status(404).json(new ApiResponse(404, null, "User not found"));
+  if (!user) throw new ApiError(404, 'User not found')
   await user.destroy();
   cache.flushAll();
   return res.json(new ApiResponse(200, null, "User deleted successfully"));
@@ -496,9 +493,8 @@ export const getAllBookings = asyncHandler(
     const status = req.query.status as string | undefined;
     const paymentType = req.query.payment_type as string | undefined;
 
-    const cacheKey = `admin_bookings_page_${page}_limit_${limit}_status_${
-      status || "all"
-    }_payment_${paymentType || "all"}`;
+    const cacheKey = `admin_bookings_page_${page}_limit_${limit}_status_${status || "all"
+      }_payment_${paymentType || "all"}`;
     const cached = cache.get(cacheKey);
     if (cached)
       return res.json(

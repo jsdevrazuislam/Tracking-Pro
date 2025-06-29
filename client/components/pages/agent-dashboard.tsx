@@ -11,7 +11,8 @@ import { getAgentAssignedParcels, getAgentStats, updateStatus } from "@/lib/apis
 import { DashboardSkeleton } from "@/components/loading-skeleton"
 import RouteOptimizerMap from "@/components/optimize-route-map"
 import { toast } from "sonner"
-import { getPlaceNameFromCoordinates } from "@/components/pages/signup-form"
+import Pagination from "@/components/pagination"
+import { useTranslation } from "@/hooks/use-translation"
 
 const getStatusIcon = (status: string) => {
   switch (status) {
@@ -43,16 +44,12 @@ const getStatusColor = (status: string) => {
   }
 }
 
-interface CurrentLocation {
-  latitude: number,
-  longitude: number,
-  place_name: string | null
-}
-
-
 
 export default function AgentDashboard() {
-  const { user } = useAuthStore()
+  const { user, currentLocation } = useAuthStore()
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const { t } = useTranslation()
   const results = useQueries({
     queries: [
       {
@@ -61,7 +58,7 @@ export default function AgentDashboard() {
       },
       {
         queryKey: ['getAgentAssignedParcels'],
-        queryFn: () => getAgentAssignedParcels({ page: 1, limit: 5 })
+        queryFn: () => getAgentAssignedParcels({ page, limit })
       },
     ],
   });
@@ -73,14 +70,12 @@ export default function AgentDashboard() {
 
   const stats = statsQuery?.data?.data;
   const parcels = parcelsQuery.data?.data?.parcels ?? [];
+  const totalPages = parcelsQuery.data?.data?.pagination?.totalPages ?? 0
+  const totalItems = parcelsQuery.data?.data?.pagination?.totalItems ?? 0
   const queryClient = useQueryClient()
-  const [currentLocation, setCurrentLocation] = useState<CurrentLocation>({
-    latitude: 0,
-    longitude: 0,
-    place_name: null
-  })
+  
 
-  const { isPending, mutate } = useMutation({
+  const { mutate } = useMutation({
     mutationFn: updateStatus,
     onError: (error) => [
       toast.error(error?.message)
@@ -89,6 +84,7 @@ export default function AgentDashboard() {
 
   const handleValue = (id: string, status: string) => {
 
+    if(!currentLocation) return toast.error('Please enable your location permission')
     queryClient.setQueryData(['getAgentAssignedParcels'], (oldData: ParcelResponse) => {
       if (!oldData || !oldData.data || !oldData.data.parcels) {
         return oldData;
@@ -111,38 +107,8 @@ export default function AgentDashboard() {
   }
 
   useEffect(() => {
-    (async () => {
-      if (!navigator.geolocation) {
-        toast.error("Geolocation is not supported by your browser.");
-        return;
-      }
-      try {
-        const position: GeolocationPosition = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-          });
-        });
-
-        const { latitude, longitude } = position.coords;
-        setCurrentLocation({
-          latitude,
-          longitude,
-          place_name: await getPlaceNameFromCoordinates(latitude, longitude)
-        })
-      } catch (error: any) {
-        if (error.code === error.PERMISSION_DENIED) {
-          toast.error("Location permission is required to sign up. Please enable location services for this site.");
-        } else if (error.code === error.TIMEOUT) {
-          toast.error("Could not get your location. Please try again.");
-        } else {
-          toast.error(`Failed to get location: ${error.message || "Unknown error."}`);
-        }
-        console.error("Geolocation error:", error);
-      }
-    })()
-  }, [])
+    parcelsQuery.refetch();
+  }, [page, limit]);
 
   if (isLoading) {
     return (
@@ -160,15 +126,15 @@ export default function AgentDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Welcome back, {user?.full_name}!</h1>
-        <p className="text-gray-600">Manage your assigned deliveries</p>
+        <h1 className="text-3xl font-bold">{t('welcomeBack')}, {user?.full_name}!</h1>
+        <p className="text-gray-600">{t('manageAssignedDeliveries')}</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Assigned</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('assigned')}</CardTitle>
             <AlertCircle className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
@@ -177,7 +143,7 @@ export default function AgentDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Picked Up</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('pickedUp')}</CardTitle>
             <Package className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
@@ -186,7 +152,7 @@ export default function AgentDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Transit</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("inTransit")}</CardTitle>
             <Clock className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
@@ -195,7 +161,7 @@ export default function AgentDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Delivered</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('delivered')}</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -207,8 +173,8 @@ export default function AgentDashboard() {
       {/* Route Optimization Map */}
       <Card>
         <CardHeader>
-          <CardTitle>Optimized Delivery Route</CardTitle>
-          <CardDescription>Your planned route for today's deliveries</CardDescription>
+          <CardTitle>{t('optimizedDeliveryRoute')}</CardTitle>
+          <CardDescription>{t('plannedRouteToday')}</CardDescription>
         </CardHeader>
         <CardContent>
           <RouteOptimizerMap parcels={parcels} />
@@ -218,8 +184,8 @@ export default function AgentDashboard() {
       {/* Assigned Parcels */}
       <Card>
         <CardHeader>
-          <CardTitle>Assigned Parcels</CardTitle>
-          <CardDescription>Parcels assigned to you for pickup and delivery</CardDescription>
+          <CardTitle>{t('assignedParcels')}</CardTitle>
+          <CardDescription>{t('parcelsForPickupDelivery')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -241,7 +207,7 @@ export default function AgentDashboard() {
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <div className="text-sm font-medium text-green-600 mb-1">Pickup Address</div>
+                    <div className="text-sm font-medium text-green-600 mb-1">{t('pickupAddress')}</div>
                     <div className="text-sm text-gray-600 flex items-start">
                       <MapPin className="h-3 w-3 mt-0.5 mr-1 flex-shrink-0" />
                       {parcel?.pickup_address?.place_name}
@@ -252,7 +218,7 @@ export default function AgentDashboard() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-blue-600 mb-1">Delivery Address</div>
+                    <div className="text-sm font-medium text-blue-600 mb-1">{t('deliveryAddress')}</div>
                     <div className="text-sm text-gray-600 flex items-start">
                       <MapPin className="h-3 w-3 mt-0.5 mr-1 flex-shrink-0" />
                       {parcel?.receiver_address?.place_name}
@@ -267,7 +233,7 @@ export default function AgentDashboard() {
                 <div className="flex items-center justify-between pt-2 border-t">
                   <div className="flex items-center space-x-4">
                     <div className="text-sm">
-                      <span className="text-gray-600">Payment:</span>
+                      <span className="text-gray-600">{t('payment')}:</span>
                       <span className="font-medium ml-1">
                         {parcel?.payment_type?.toUpperCase()} - ${parcel.amount}
                       </span>
@@ -290,6 +256,16 @@ export default function AgentDashboard() {
                 </div>
               </div>
             ))}
+            {
+              parcels.length > 0 &&
+              <Pagination
+                currentPage={page}
+                totalItems={totalItems}
+                totalPages={totalPages}
+                onPageChange={(value) => setPage(value)}
+                onLimitChange={(value) => setLimit(value)}
+              />
+            }
           </div>
         </CardContent>
       </Card>

@@ -6,6 +6,8 @@ interface AuthState {
   logout: () => void;
   user: User | null;
   initialLoading: () => void
+  currentLocation: CurrentLocation | null
+  setCurrentLocation: (data: CurrentLocation) => void
 }
 
 type Language = "en" | "bn";
@@ -15,4 +17,10 @@ interface TranslationStore {
   translations: Record<Language, Record<string, string>>;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+}
+
+interface CurrentLocation {
+  latitude: number,
+  longitude: number,
+  place_name: string | null
 }

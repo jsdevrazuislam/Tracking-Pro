@@ -5,7 +5,7 @@ import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
-import { Truck, Home, LogOut, Menu, Bell, Package, Users, BarChart3, MapPin, History } from "lucide-react"
+import { Truck, Home, LogOut, Menu, Bell, Package, Users, BarChart3, MapPin, ScanBarcode } from "lucide-react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuthStore } from "@/store/store"
@@ -49,12 +49,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     ],
     agent: [
         { name: t('dashboard'), href: "/agent/dashboard", icon: Home },
+        { name: t('scan'), href: "/agent/scan", icon: ScanBarcode },
     ],
     customer: [
         { name: t('dashboard'), href: "/customer/dashboard", icon: Home },
         { name: t('bookParcel'), href: "/customer/book-parcel", icon: Package },
         { name: t('trackParcel'), href: "/customer/track", icon: MapPin },
-        { name: t('history'), href: "/customer/history", icon: History },
     ],
 }
 
@@ -121,7 +121,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                             <Button
                                                 variant="outline"
                                                 onClick={handleLogout}
-                                                className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
+                                                className="w-fit justify-start text-red-600 border-red-200 hover:bg-red-50"
                                             >
                                                 <LogOut className="h-4 w-4 mr-2" />
                                                 {t('logout')}
@@ -143,13 +143,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         </div>
 
                         <div className="flex items-center space-x-4">
-
-                            <Button variant="ghost" size="sm" className="relative">
-                                <Bell className="h-5 w-5" />
-                                <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center p-0">
-                                    2
-                                </Badge>
-                            </Button>
                             <LanguageSwitcher />
                             <Button variant="outline" size="sm" onClick={handleLogout} className="hidden sm:flex">
                                 <LogOut className="h-4 w-4 mr-2" />

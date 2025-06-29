@@ -15,6 +15,7 @@ const ApiStrings = {
   // Admin
   GET_ADMIN_STATS: '/admin/stats',
   REPORT_EXPORT: '/admin/export',
+  GENERATE_LABEL: '/parcel/generate-barcode',
   UNASSIGNED_PARCELS: '/admin/unassigned-parcels',
   GET_ACTIVE_AGENTS: '/admin/agents',
   GET_USERS: '/admin/users',

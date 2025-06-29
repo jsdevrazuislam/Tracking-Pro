@@ -6,14 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Search, AlertCircle, Phone, User, CheckCircle, Clock, Package, MapPin } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
-import { toast } from "sonner"
 import { trackParcel } from "@/lib/apis/parcel"
 import { addDays, format } from "date-fns"
 import Link from "next/link"
 import LiveTrackingMap from "@/components/live-tracking-map"
 import { Badge } from "@/components/ui/badge"
+import { useTranslation } from "@/hooks/use-translation"
+import { useSearchParams } from "next/navigation"
 
 const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -29,55 +29,59 @@ const getStatusColor = (status: string) => {
     }
 }
 
-function getDisplayStatus(systemStatus: string): string {
-    switch (systemStatus) {
-        case 'pending':
-            return 'Parcel Booked';
-        case 'assigned':
-            return 'Assigned to Rider';
-        case 'picked':
-            return 'Picked Up';
-        case 'in_transit':
-            return 'In Transit';
-        case 'out_for_delivery':
-            return 'Out for Delivery';
-        case 'delivered':
-            return 'Delivered';
-        case 'cancelled':
-            return 'Cancelled';
-        default:
-            return systemStatus.replace(/_/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
-    }
-}
+
 
 
 export default function TrackParcel() {
-    const [trackingId, setTrackingId] = useState("")
-    const [trackingData, setTrackingData] = useState<TrackParcelData | null>(null)
-    const router = useRouter()
+    const params = useSearchParams()
+    const [trackingId, setTrackingId] = useState(params.get('tracking_code') ?? '')
+    const [trackingData, setTrackingData] = useState<TrackParcelData | null | undefined>(null)
+    const { t } = useTranslation()
 
-    const { mutate, isPending } = useMutation({
+    const { mutate, isPending, reset } = useMutation({
         mutationFn: trackParcel,
         onSuccess: (data) => {
             setTrackingData(data?.data)
         },
-        onError: (error) => {
-            toast.error(error?.message)
+        onError: () => {
+            setTrackingData(undefined)
         }
     })
 
     const handleSearch = () => {
+        reset()
         mutate(trackingId)
+    }
+
+    function getDisplayStatus(systemStatus: string): string {
+        switch (systemStatus) {
+            case 'pending':
+                return t('parcelBooked');
+            case 'assigned':
+                return t('assignedToRider');
+            case 'picked':
+                return t('pickedUped');
+            case 'in_transit':
+                return t('inTransited');
+            case 'out_for_delivery':
+                return 'Out for Delivery';
+            case 'delivered':
+                return 'Delivered';
+            case 'cancelled':
+                return 'Cancelled';
+            default:
+                return systemStatus.replace(/_/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
+        }
     }
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-in">
             <div className="text-center space-y-4">
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    Track Your Parcel 📦
+                    {t('trackYourParcel')}
                 </h1>
                 <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                    Enter your tracking ID to get real-time updates on your parcel's journey
+                    {t('enterTrackingIdRealtime')}
                 </p>
             </div>
 
@@ -85,23 +89,29 @@ export default function TrackParcel() {
                 <CardHeader className="text-center pb-6">
                     <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2">
                         <Search className="h-6 w-6 text-blue-600" />
-                        Enter Tracking ID
+                        {t('enterTrackingId')}
                     </CardTitle>
                     <CardDescription className="text-base">
-                        Track your parcel with the ID provided during booking
+                        {t('trackParcelWithId')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
                         <Label htmlFor="trackingId" className="text-sm font-medium">
-                            Tracking ID
+                            {t('trackingId')}
                         </Label>
                         <div className="flex gap-3">
                             <Input
                                 id="trackingId"
-                                placeholder="Enter tracking ID (e.g., PKG001)"
+                                placeholder={t('enterTrackingIdExample')}
                                 value={trackingId}
-                                onChange={(e) => setTrackingId(e.target.value)}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setTrackingId(value);
+                                    if (trackingData === undefined) {
+                                        setTrackingData(null);
+                                    }
+                                }}
                                 className="h-12 text-lg font-mono"
                                 onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                             />
@@ -113,12 +123,12 @@ export default function TrackParcel() {
                                 {isPending ? (
                                     <div className="flex items-center gap-2">
                                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        Searching...
+                                        {t('searching')}...
                                     </div>
                                 ) : (
                                     <>
                                         <Search className="h-4 w-4 mr-2" />
-                                        Track
+                                        {t('trackNow')}
                                     </>
                                 )}
                             </Button>
@@ -131,19 +141,20 @@ export default function TrackParcel() {
                 <Card className="border-0 bg-gradient-to-br from-red-50 to-red-100/50">
                     <CardContent className="text-center py-12">
                         <AlertCircle className="h-16 w-16 mx-auto text-red-500 mb-4" />
-                        <h3 className="text-xl font-semibold text-red-800 mb-2">Tracking ID Not Found</h3>
+                        <h3 className="text-xl font-semibold text-red-800 mb-2">{t('trackingIdNotFound')}</h3>
                         <p className="text-red-600 mb-4">
-                            We couldn't find any parcel with tracking ID "{trackingId}". Please check your ID and try again.
+                            {t('noParcelFoundWithId')} "{trackingId}". {t('checkIdAndTryAgain')}
                         </p>
                         <Button
                             variant="outline"
                             onClick={() => {
                                 setTrackingId("")
                                 setTrackingData(null)
+                                reset()
                             }}
                             className="border-red-300 text-red-700 hover:bg-red-50"
                         >
-                            Try Again
+                            {t('tryAgain')}
                         </Button>
                     </CardContent>
                 </Card>
@@ -152,8 +163,8 @@ export default function TrackParcel() {
             {
                 trackingData && <div className="max-w-4xl mx-auto space-y-6">
                     <div>
-                        <h1 className="text-3xl font-bold">Track Parcel</h1>
-                        <p className="text-gray-600">Real-time tracking for {trackingId}</p>
+                        <h1 className="text-3xl font-bold">{t('trackParcel')}</h1>
+                        <p className="text-gray-600">{t('realtimeTrackingFor')} {trackingId}</p>
                     </div>
                     <div className="grid lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2 space-y-6">
@@ -161,13 +172,13 @@ export default function TrackParcel() {
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center justify-between">
-                                        <span>Current Status</span>
+                                        <span>{t('currentStatus')}</span>
                                         <Badge className={getStatusColor(trackingData.status)}>
                                             {trackingData.status.replace("-", " ").toUpperCase()}
                                         </Badge>
                                     </CardTitle>
                                     <CardDescription>
-                                        Last updated: {
+                                        {t('lastUpdated')}: {
                                             trackingData?.timeline &&
                                             trackingData.timeline.length > 0 &&
                                             format(trackingData.timeline[trackingData.timeline.length - 1]?.timestamp, 'yyyy-MM-dd')
@@ -178,10 +189,10 @@ export default function TrackParcel() {
                                     <div className="flex items-center space-x-4">
                                         <MapPin className="h-8 w-8 text-blue-600" />
                                         <div>
-                                            <div className="font-medium">Current Location</div>
+                                            <div className="font-medium">{t('currentLocation')}</div>
                                             <div className="text-gray-600">{trackingData?.current_location?.place_name}</div>
                                             <div className="text-sm text-gray-500 mt-1">
-                                                Estimated delivery: {format(addDays(new Date(trackingData?.createdAt ?? ''), 2), 'yyyy-MM-dd')}
+                                                {t('estDelivery')}: {format(addDays(new Date(trackingData?.createdAt ?? ''), 2), 'yyyy-MM-dd')}
                                             </div>
                                         </div>
                                     </div>
@@ -192,8 +203,8 @@ export default function TrackParcel() {
 
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Tracking Timeline</CardTitle>
-                                    <CardDescription>Complete journey of your parcel</CardDescription>
+                                    <CardTitle>{t('trackingTimeline')}</CardTitle>
+                                    <CardDescription>{t('completeJourneyOfParcel')}</CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-4">
@@ -228,18 +239,18 @@ export default function TrackParcel() {
                                 <CardHeader>
                                     <CardTitle className="flex items-center">
                                         <User className="h-5 w-5 mr-2" />
-                                        Delivery Agent
+                                        {t('deliveryAgent')}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div>
                                         <div className="font-medium">{trackingData?.agent?.full_name}</div>
-                                        <div className="text-sm text-gray-600">Assigned Agent</div>
+                                        <div className="text-sm text-gray-600">{t('assignedAgent')}</div>
                                     </div>
                                     <Link href={`tel:${trackingData?.agent?.phone}`}>
                                         <Button variant="outline" className="w-full">
                                             <Phone className="h-4 w-4 mr-2" />
-                                            Call Agent
+                                            {t('callAgent')}
                                         </Button>
                                     </Link>
                                 </CardContent>
@@ -247,20 +258,20 @@ export default function TrackParcel() {
 
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Delivery Information</CardTitle>
+                                    <CardTitle>{t("deliveryInformation")}</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
                                     <div>
-                                        <div className="text-sm text-gray-600">Tracking ID</div>
+                                        <div className="text-sm text-gray-600">{t('trackingId')}</div>
                                         <div className="font-medium">{trackingData?.tracking_code}</div>
                                     </div>
                                     <div>
-                                        <div className="text-sm text-gray-600">Estimated Delivery</div>
+                                        <div className="text-sm text-gray-600">{t('estDelivery')}</div>
                                         <div className="font-medium">{format(addDays(new Date(trackingData?.createdAt), 2), 'yyyy-MM-dd')}</div>
                                     </div>
                                     <div>
-                                        <div className="text-sm text-gray-600">Service Type</div>
-                                        <div className="font-medium">Standard Delivery</div>
+                                        <div className="text-sm text-gray-600">{t('serviceType')}</div>
+                                        <div className="font-medium">{t('standardDelivery')}</div>
                                     </div>
                                 </CardContent>
                             </Card>

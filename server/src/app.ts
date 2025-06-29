@@ -17,14 +17,14 @@ import cookieParser from "cookie-parser";
 import { initializeSocketIO } from "@/socket";
 import { load_routes } from "@/utils/load-routes";
 
-
+const origin = ["http://192.168.1.101:3000", "http://192.168.8.76:3000", "http://localhost:3000", 'https://87f5-103-153-155-209.ngrok-free.app']
 const app: Application = express();
 const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   pingTimeout: 60000,
   cors: {
-    origin: ["http://localhost:5173", "http://localhost:3000"],
+    origin,
     credentials: true,
   },
 });
@@ -62,7 +62,7 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:3000"],
+    origin,
     credentials: true,
   })
 );
