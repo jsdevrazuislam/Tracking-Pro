@@ -38,9 +38,18 @@ export function IndividualAssignmentModal({ parcel }: IndividualAssignmentModalP
     const { mutate, isPending } = useMutation({
         mutationFn: assignParcel,
         onSuccess: (_, variable) => {
-            queryClient.setQueryData(['unAssignParcels'], (oldData: ParcelResponse) => {
-                return oldData?.data?.parcels?.filter((p) => p.id !== variable.parcelId)
-            })
+            queryClient.setQueryData(['unAssignParcels'], (oldData: ParcelResponse | undefined) => {
+                if (!oldData) return oldData;
+
+                return {
+                    ...oldData,
+                    data: {
+                        ...oldData.data,
+                        parcels: oldData?.data?.parcels?.filter((p) => p.id !== variable.parcelId),
+                    },
+                };
+            });
+
             toast.success(`Successfully assigned parcel`)
             setSelectedAgent("")
             setSearchTerm("")
@@ -119,55 +128,44 @@ export function IndividualAssignmentModal({ parcel }: IndividualAssignmentModalP
                 </div>
 
                 <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {isLoading ? <TableSkeleton rows={5} columns={5} /> : availableAgents.map((agent) => {
-                        const capacityPercentage = (agent.currentDeliveries / agent.completedDeliveries) * 100
-                        return (
-                            <div
-                                key={agent.id}
-                                className={`border rounded-lg p-3 cursor-pointer transition-all ${selectedAgent === agent.id.toString()
-                                    ? "border-blue-500 bg-blue-50"
-                                    : "hover:border-gray-300 hover:bg-gray-50"
-                                    }`}
-                                onClick={() => setSelectedAgent(agent.id.toString())}
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center space-x-2">
-                                        <User className="h-4 w-4 text-gray-500" />
-                                        <div className="font-medium">{agent?.full_name}</div>
-                                        <Badge className="bg-green-100 text-green-800 text-xs">Active</Badge>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                        <div className="text-gray-600">Email</div>
-                                        <div className="font-medium">
-                                            {agent?.email}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="text-gray-600">Phone</div>
-                                        <div className="font-medium">
-                                            {agent?.phone}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="text-gray-600">Completed</div>
-                                        <div className="font-medium">{agent?.completedDeliveries}</div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-2">
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                        <div
-                                            className="bg-green-500 h-2 rounded-full transition-all"
-                                            style={{ width: `${capacityPercentage}%` }}
-                                        ></div>
-                                    </div>
+                    {isLoading ? <TableSkeleton rows={5} columns={5} /> : availableAgents.map((agent) => (
+                        <div
+                            key={agent.id}
+                            className={`border rounded-lg p-3 cursor-pointer transition-all ${selectedAgent === agent.id.toString()
+                                ? "border-blue-500 bg-blue-50"
+                                : "hover:border-gray-300 hover:bg-gray-50"
+                                }`}
+                            onClick={() => setSelectedAgent(agent.id.toString())}
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center space-x-2">
+                                    <User className="h-4 w-4 text-gray-500" />
+                                    <div className="font-medium">{agent?.full_name}</div>
+                                    <Badge className="bg-green-100 text-green-800 text-xs">Active</Badge>
                                 </div>
                             </div>
-                        )
-                    })}
+
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <div className="text-gray-600">{t('email')}</div>
+                                    <div className="font-medium">
+                                        {agent?.email}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-600">{t('phone')}</div>
+                                    <div className="font-medium">
+                                        {agent?.phone}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-600">{t('successfullyCompleted')}</div>
+                                    <div className="font-medium">{agent?.completedDeliveries}</div>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                    )}
                 </div>
 
                 {availableAgents.length === 0 && (
