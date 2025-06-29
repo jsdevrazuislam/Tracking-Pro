@@ -13,21 +13,42 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Search, User, MapPin, Package } from "lucide-react"
-import { useQuery } from "@tanstack/react-query"
-import { getActiveAgents } from "@/lib/apis/admin"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { assignParcel, getActiveAgents } from "@/lib/apis/admin"
+import { toast } from "sonner"
+import { TableSkeleton } from "@/components/loading-skeleton"
+import { useTranslation } from "@/hooks/use-translation"
+
 
 interface IndividualAssignmentModalProps {
     parcel: ParcelsEntity
-    onAssign: (parcelId: string, agentId: string) => void
 }
 
-export function IndividualAssignmentModal({ parcel, onAssign }: IndividualAssignmentModalProps) {
+export function IndividualAssignmentModal({ parcel }: IndividualAssignmentModalProps) {
     const [selectedAgent, setSelectedAgent] = useState("")
     const [searchTerm, setSearchTerm] = useState("")
     const [isOpen, setIsOpen] = useState(false)
-    const { isPending, data } = useQuery({
+    const queryClient = useQueryClient()
+    const { t } = useTranslation()
+    const { isLoading, data } = useQuery({
         queryKey: ['getActiveAgents'],
         queryFn: () => getActiveAgents({ page: 1, limit: 10 })
+    })
+
+    const { mutate, isPending } = useMutation({
+        mutationFn: assignParcel,
+        onSuccess: (_, variable) => {
+            queryClient.setQueryData(['unAssignParcels'], (oldData: ParcelResponse) => {
+                return oldData?.data?.parcels?.filter((p) => p.id !== variable.parcelId)
+            })
+            toast.success(`Successfully assigned parcel`)
+            setSelectedAgent("")
+            setSearchTerm("")
+            setIsOpen(false)
+        },
+        onError: (error) => {
+            toast.error(error?.message)
+        }
     })
 
     const agents = data?.data?.agents ?? []
@@ -36,10 +57,10 @@ export function IndividualAssignmentModal({ parcel, onAssign }: IndividualAssign
 
     const handleAssign = () => {
         if (selectedAgent) {
-            onAssign(parcel.id, selectedAgent)
-            setSelectedAgent("")
-            setSearchTerm("")
-            setIsOpen(false)
+            mutate({
+                parcelId: parcel.id,
+                agentId: selectedAgent
+            })
         }
     }
 
@@ -60,35 +81,33 @@ export function IndividualAssignmentModal({ parcel, onAssign }: IndividualAssign
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger className=" cursor-pointer" asChild>
                 <Button size="sm" variant="outline" className="text-xs">
-                    Quick Assign
+                    {t('quickAssign')}
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto ">
                 <DialogHeader>
-                    <DialogTitle>Assign Parcel to Agent</DialogTitle>
-                    <DialogDescription>Select an available agent to assign this parcel</DialogDescription>
+                    <DialogTitle>{t('assignParcelToAgent')}</DialogTitle>
+                    <DialogDescription>{t('selectAvailableAgent')}</DialogDescription>
                 </DialogHeader>
 
-                {/* Parcel Details */}
                 <div className="border rounded-lg p-4 bg-gray-50">
                     <div className="flex items-center justify-between mb-2">
                         <div className="font-medium text-lg">{parcel?.tracking_code}</div>
                         <Badge className={getPriorityColor(parcel?.status)}>{parcel?.status?.toUpperCase()}</Badge>
                     </div>
                     <div className="text-sm text-gray-600 space-y-1">
-                        <div>Customer: {parcel?.sender?.full_name}</div>
+                        <div>{t('customer')}: {parcel?.sender?.full_name}</div>
                         <div className="flex items-center">
                             <MapPin className="h-3 w-3 mr-1" />
                             {parcel?.pickup_address?.place_name} → {parcel?.receiver_address?.place_name}
                         </div>
                         <div className="flex justify-between">
-                            <span>Weight: {parcel?.parcel_size} Kg</span>
+                            <span>{t('weight')}: {parcel?.parcel_size} {t('kg')}</span>
                             <span className="font-medium">${parcel?.amount}</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Agent Search */}
                 <div className="relative">
                     <Search className="h-4 w-4 z-10 absolute left-3 top-3 text-gray-400" />
                     <Input
@@ -100,14 +119,14 @@ export function IndividualAssignmentModal({ parcel, onAssign }: IndividualAssign
                 </div>
 
                 <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {availableAgents.map((agent) => {
+                    {isLoading ? <TableSkeleton rows={5} columns={5} /> : availableAgents.map((agent) => {
                         const capacityPercentage = (agent.currentDeliveries / agent.completedDeliveries) * 100
                         return (
                             <div
                                 key={agent.id}
                                 className={`border rounded-lg p-3 cursor-pointer transition-all ${selectedAgent === agent.id.toString()
-                                        ? "border-blue-500 bg-blue-50"
-                                        : "hover:border-gray-300 hover:bg-gray-50"
+                                    ? "border-blue-500 bg-blue-50"
+                                    : "hover:border-gray-300 hover:bg-gray-50"
                                     }`}
                                 onClick={() => setSelectedAgent(agent.id.toString())}
                             >
@@ -124,6 +143,12 @@ export function IndividualAssignmentModal({ parcel, onAssign }: IndividualAssign
                                         <div className="text-gray-600">Email</div>
                                         <div className="font-medium">
                                             {agent?.email}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-gray-600">Phone</div>
+                                        <div className="font-medium">
+                                            {agent?.phone}
                                         </div>
                                     </div>
                                     <div>
@@ -154,10 +179,10 @@ export function IndividualAssignmentModal({ parcel, onAssign }: IndividualAssign
                 )}
 
                 <div className="flex justify-end space-x-2 pt-4 border-t">
-                    <Button variant="outline" onClick={() => setIsOpen(false)}>
+                    <Button isLoading={isPending} variant="outline" onClick={() => setIsOpen(false)}>
                         Cancel
                     </Button>
-                    <Button onClick={handleAssign} disabled={!selectedAgent} className="min-w-24">
+                    <Button isLoading={isPending} onClick={handleAssign} disabled={!selectedAgent} className="min-w-24">
                         Assign Parcel
                     </Button>
                 </div>

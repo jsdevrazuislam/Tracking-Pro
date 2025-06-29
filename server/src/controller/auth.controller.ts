@@ -1,4 +1,4 @@
-import { User, UserRole } from "@/models/user.models";
+import { User, UserRole, UserStatus } from "@/models/user.models";
 import ApiError from "@/utils/api-error";
 import ApiResponse from "@/utils/api-response";
 import asyncHandler from "@/utils/async-handler";
@@ -7,7 +7,9 @@ import {
   generate_access_token,
   hash_password,
 } from "@/utils/auth-helper";
+import { cache } from "@/utils/cache";
 import { Request, Response } from "express";
+import { Op } from "sequelize";
 
 const options = {
   httpOnly: true,
@@ -15,12 +17,19 @@ const options = {
 };
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
-  const { email, full_name, password, role } = req.body;
+  const { email, full_name, password, role, phone, location } = req.body;
 
   if (role === UserRole.ADMIN)
     throw new ApiError(400, `You can't signup as admin`);
 
-  const user = await User.findOne({ where: { email } });
+  const user = await User.findOne({
+    where: {
+      [Op.or]: [
+        { email },
+        { phone },
+      ],
+    },
+  });
 
   if (user) throw new ApiError(400, "User already exist");
 
@@ -29,6 +38,8 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     password: await hash_password(password),
     full_name,
     role: role ? role : UserRole.CUSTOMER,
+    phone,
+    location
   };
 
   const newUser = await User.create(payload);
@@ -42,6 +53,8 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   const userWithoutPassword = await User.findByPk(newUser.id, {
     attributes: { exclude: ["password"] },
   });
+
+  cache.flushAll()
 
   return res.cookie("access_token", access_token, options).json(
     new ApiResponse(
@@ -58,11 +71,19 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ where: { email } });
+  const user = await User.findOne({
+    where: {
+      [Op.or]: [
+        { email },
+        { phone: email },
+      ],
+    },
+  });
 
   if (!user) throw new ApiError(400, "User doesn't exits");
   const is_password_correct = await compare_password(user.password, password);
   if (!is_password_correct) throw new ApiError(400, "Invalid User Details");
+  if (user.status !== UserStatus.ACTIVE) throw new ApiError(400, 'Please contact with admin')
 
   const access_token = generate_access_token({
     id: user.id,

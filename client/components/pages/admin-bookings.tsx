@@ -10,10 +10,11 @@ import {
     Search,
     Filter,
 } from "lucide-react"
-import { AdminLayout } from "@/components/admin-layout"
 import { useQuery } from '@tanstack/react-query'
 import { getAllBookings } from '@/lib/apis/admin'
 import { format } from 'date-fns';
+import { TrackingSkeleton } from '@/components/loading-skeleton'
+import { useTranslation } from '@/hooks/use-translation'
 
 
 
@@ -32,20 +33,6 @@ const getStatusColor = (status: string) => {
     }
 }
 
-const getPriorityColor = (priority: string) => {
-    switch (priority) {
-        case "high":
-            return "bg-red-100 text-red-800"
-        case "medium":
-            return "bg-yellow-100 text-yellow-800"
-        case "low":
-            return "bg-green-100 text-green-800"
-        default:
-            return "bg-gray-100 text-gray-800"
-    }
-}
-
-
 const AdminBookingList = () => {
 
     const [searchTerm, setSearchTerm] = useState("")
@@ -54,6 +41,7 @@ const AdminBookingList = () => {
         queryKey: ['getAllBookings'],
         queryFn: () => getAllBookings({ page: 1, limit: 10})
     })
+    const { t } =  useTranslation()
 
     const bookings = data?.data?.bookings ?? []
 
@@ -66,13 +54,12 @@ const AdminBookingList = () => {
     })
 
     return (
-        <AdminLayout>
             <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
                 <CardHeader>
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div>
-                            <CardTitle className="text-2xl font-bold">Recent Bookings</CardTitle>
-                            <CardDescription className="text-base">Latest parcel bookings and their current status</CardDescription>
+                            <CardTitle className="text-2xl font-bold">{t('recentBookings')}</CardTitle>
+                            <CardDescription className="text-base">{t('latestParcelBookings')}</CardDescription>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-3">
                             <div className="relative">
@@ -102,7 +89,7 @@ const AdminBookingList = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {filteredBookings.map((booking) => (
+                        {isLoading ? <TrackingSkeleton /> : filteredBookings.map((booking) => (
                             <div
                                 key={booking.id}
                                 className="group p-6 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-300 bg-white"
@@ -123,10 +110,10 @@ const AdminBookingList = () => {
                                             </div>
                                             <div className="space-y-1 text-sm text-gray-600">
                                                 <div>
-                                                    Customer: <span className="font-medium">{booking?.sender?.full_name}</span>
+                                                    {t('customer')}: <span className="font-medium">{booking?.sender?.full_name}</span>
                                                 </div>
                                                 <div>
-                                                    Agent: <span className="font-medium">{booking?.agent?.full_name ?? 'Unassigned'}</span>
+                                                    {t('agent')}: <span className="font-medium">{booking?.agent?.full_name ?? 'Unassigned'}</span>
                                                 </div>
                                                 <div className="text-xs text-gray-500">{(format(new Date(booking?.createdAt), 'yyyy-MM-dd hh:mm a'))}</div>
                                             </div>
@@ -144,7 +131,6 @@ const AdminBookingList = () => {
                     </div>
                 </CardContent>
             </Card>
-        </AdminLayout>
     )
 }
 

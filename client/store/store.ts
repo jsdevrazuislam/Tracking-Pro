@@ -10,7 +10,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   accessToken: Cookies.get(ACCESS_TOKEN) || null,
   isAuthenticated: !!Cookies.get(ACCESS_TOKEN),
   user: null,
+  currentLocation: null,
   setUser: (user) => set({ user }),
+  setCurrentLocation: (currentLocation) => set({ currentLocation }),
   setLogin: (accessToken, user) => {
     Cookies.set(ACCESS_TOKEN, accessToken);
     set({

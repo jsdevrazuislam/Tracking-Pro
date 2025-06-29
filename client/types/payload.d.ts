@@ -7,6 +7,8 @@ interface RegisterPayload {
   password: string;
   full_name: string;
   role: string;
+  phone:string
+  location:object
 }
 
 interface BookParcelPayload {
@@ -16,6 +18,12 @@ interface BookParcelPayload {
   parcel_type: string;
   payment_type: string;
   amount: number
+}
+
+interface UpdateStatus{
+  status: string,
+  current_location: object
+  id:string
 }
 
 interface AssignParcelBooking{

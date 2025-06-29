@@ -18,6 +18,8 @@ export class User extends Model {
   public full_name!: string;
   public email!: string;
   public password!: string;
+  public phone!: string;
+  public location!: JSON;
   public role!: UserRole;
   public status!: UserStatus;
 }
@@ -40,6 +42,15 @@ User.init(
       type: DataTypes.ENUM(...Object.values(UserStatus)),
       defaultValue: UserStatus.ACTIVE
     },
+    location:{
+      type: DataTypes.JSON,
+      allowNull: true
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true
+    }
   },
   { sequelize, modelName: "User", tableName: "users", timestamps: true }
 );

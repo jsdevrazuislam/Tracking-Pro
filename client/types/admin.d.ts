@@ -13,6 +13,8 @@ interface Stats {
   activeAgents: string;
   codAmount: number;
   deliveredToday: number;
+  transitToday: number
+  pendingToday: number
   failedDeliveries: number;
   revenueThisMonth: number;
   todayRevenue: number;
@@ -36,6 +38,7 @@ interface Stats {
   currentDeliveries: number
   completedDeliveries: number
   createdAt: string;
+  phone:string
 }
 
  interface UsersResponse {
@@ -55,6 +58,7 @@ interface Stats {
   status: string;
   role: string;
   createdAt: string;
+  phone: string
   totalOrders: number;
   completedDeliveries: number;
 }

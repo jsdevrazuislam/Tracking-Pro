@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { useTranslation } from "@/hooks/use-translation"
 import { Package, Search, History, Users, Truck, BarChart3, MapPin, RefreshCw, AlertCircle, CheckCircle, Settings, Bell} from 'lucide-react'
 import Link from "next/link"
 
@@ -30,6 +31,9 @@ export function EmptyState({
   onSecondaryAction,
   className = "",
 }: EmptyStateProps) {
+
+  const { t } = useTranslation()
+
   const getEmptyStateConfig = (type: string) => {
     switch (type) {
       case "no-parcels":
@@ -108,10 +112,10 @@ export function EmptyState({
       case "no-assignments":
         return {
           icon: Package,
-          title: title || "No Unassigned Parcels",
+          title: title || t('noUnassignedParcels'),
           description:
-            description || "All parcels have been assigned to delivery agents. Great job keeping up with the workload!",
-          actionLabel: actionLabel || "View All Parcels",
+            description || t('allParcelsAssigned'),
+          actionLabel: actionLabel || t('viewAllParcels'),
           gradient: "from-green-50 to-emerald-50",
           iconColor: "text-green-500",
           iconBg: "bg-green-100",

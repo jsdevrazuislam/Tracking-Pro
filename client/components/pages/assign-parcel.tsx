@@ -1,39 +1,35 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { MapPin, Clock, Search } from "lucide-react"
-import { AdminLayout } from "@/components/admin-layout"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { assignParcel, unAssignParcels } from "@/lib/apis/admin"
+import { useQuery } from "@tanstack/react-query"
+import { unAssignParcels } from "@/lib/apis/admin"
 import { format } from 'date-fns';
 import { IndividualAssignmentModal } from "@/components/individual-assignment-modal"
+import { TableSkeleton } from "@/components/loading-skeleton"
+import { EmptyState } from "../empty-states"
+import { useTranslation } from "@/hooks/use-translation"
+import api from "@/lib/api"
+import { saveAs } from 'file-saver'
 import { toast } from "sonner"
+import ApiStrings from "@/lib/api-strings"
+import { Button } from "@/components/ui/button"
+
 
 
 export default function AssignParcels() {
   const [parcels, setParcels] = useState<ParcelsEntity[]>([])
   const [selectedParcels, setSelectedParcels] = useState<string[]>([])
-  const [selectedAgent, setSelectedAgent] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
-  const { isPending, data } = useQuery({
+  const [loading, setLoading] = useState(false)
+  const { isLoading, data } = useQuery({
     queryKey: ['unAssignParcels'],
     queryFn: () => unAssignParcels({ page: 1, limit: 10 })
   })
-
-  const { mutate, isPending: isLoading } = useMutation({
-    mutationFn: assignParcel,
-    onSuccess: (_, variable) => {
-      toast.success(`Successfully assigned parcel ${variable.parcelId}`)
-    },
-    onError: (error) => {
-      toast.error(error?.message)
-    }
-  })
+  const { t } = useTranslation()
 
   const handleParcelSelect = (parcelId: string, checked: boolean) => {
     if (checked) {
@@ -49,13 +45,20 @@ export default function AssignParcels() {
       parcel?.sender?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-
-  const handleIndividualAssign = (parcelId: string, agentId: string) => {
-    setParcels((prev) => prev.filter((p) => p.id !== parcelId))
-    mutate({
-      parcelId,
-      agentId
-    })
+  const handlePrintLabel = async (parcelId:string) => {
+    try {
+      setLoading(true)
+      const response = await api.get(`${ApiStrings.GENERATE_LABEL}/${parcelId}`, {
+        responseType: 'blob',
+      })
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      saveAs(blob, `barcode_label.pdf`)
+    } catch (error) {
+      toast.error('Export failed. Please try again.')
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -63,75 +66,75 @@ export default function AssignParcels() {
   }, [data])
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Assign Parcels</h1>
-          <p className="text-gray-600">Assign unassigned parcels to available delivery agents</p>
-        </div>
-        <div className="w-full space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Unassigned Parcels ({filteredParcels.length})</CardTitle>
-                  <CardDescription>Select parcels to assign to agents</CardDescription>
-                </div>
-                <div className="relative">
-                  <Search className="h-4 w-4 absolute z-10 left-3 top-3 text-gray-400" />
-                  <Input
-                    placeholder="Search parcels..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-64"
-                  />
-                </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">{t('assignParcels')}</h1>
+        <p className="text-gray-600">{t('parcelsForPickupDelivery')}</p>
+      </div>
+      <div className="w-full space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>{t('unassignedParcels')} ({filteredParcels.length})</CardTitle>
+                <CardDescription>{t('selectParcelsToAssign')}</CardDescription>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {filteredParcels.map((parcel) => (
-                  <div key={parcel.id} className="border rounded-lg p-4">
-                    <div className="flex items-start space-x-4">
-                      <Checkbox
-                        checked={selectedParcels.includes(parcel.id)}
-                        onCheckedChange={(checked) => handleParcelSelect(parcel.id, checked as boolean)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-medium">{parcel.tracking_code}</div>
+              <div className="relative">
+                <Search className="h-4 w-4 absolute z-10 left-3 top-3 text-gray-400" />
+                <Input
+                  placeholder="Search parcels..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-64"
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {isLoading ? <TableSkeleton rows={5} columns={5} /> : filteredParcels?.length > 0 ? filteredParcels?.map((parcel) => (
+                <div key={parcel.id} className="border rounded-lg p-4">
+                  <div className="flex items-start space-x-4">
+                    <Checkbox
+                      checked={selectedParcels.includes(parcel.id)}
+                      onCheckedChange={(checked) => handleParcelSelect(parcel.id, checked as boolean)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium">{parcel.tracking_code}</div>
+                      </div>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <div>{t('customer')}: {parcel?.sender?.full_name}</div>
+                        <div className="flex items-center">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {parcel?.pickup_address?.place_name} → {parcel?.receiver_address?.place_name}
                         </div>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <div>Customer: {parcel?.sender?.full_name}</div>
-                          <div className="flex items-center">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {parcel?.pickup_address?.place_name} → {parcel?.receiver_address?.place_name}
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span>Weight: {parcel?.parcel_size} Kg</span>
-                            <span className="font-medium">${parcel.amount}</span>
-                          </div>
-                          <div className="flex items-center text-xs text-gray-500">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Created: {format(new Date(parcel.createdAt), 'yyyy-MM-dd')}
-                          </div>
+                        <div className="flex items-center justify-between">
+                          <span>{t("weight")}: {parcel?.parcel_size} {t('kg')}</span>
+                          <span className="font-medium">${parcel.amount}</span>
+                        </div>
+                        <div className="flex items-center text-xs text-gray-500">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {t('created')}: {format(new Date(parcel.createdAt), 'yyyy-MM-dd')}
                         </div>
                       </div>
                     </div>
-                    <div className="mt-2 pt-2 border-t flex justify-end">
-                      <IndividualAssignmentModal
-                        parcel={parcel}
-                        onAssign={handleIndividualAssign}
-                      />
-                    </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  <div className="mt-2 pt-2 border-t flex gap-4 justify-end">
+                    <Button size='sm' isLoading={isLoading} onClick={() => handlePrintLabel(parcel.id)}>
+                      {t('printLabel')}
+                    </Button>
+                    <IndividualAssignmentModal
+                      parcel={parcel}
+                    />
+                  </div>
+                </div>
+              )) : <EmptyState type='no-assignments' className="shadow-none bg-transparent" actionHref="/admin/bookings" />}
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </AdminLayout>
+    </div>
   )
 }
