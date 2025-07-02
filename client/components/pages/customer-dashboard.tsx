@@ -232,13 +232,13 @@ export default function CustomerDashboard() {
                             >
                                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                     <div className="flex items-start space-x-4 flex-1">
-                                        <div className="flex-shrink-0 p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors duration-300">
+                                        <div className="hidden md:block flex-shrink-0 w-fit p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors duration-300">
                                             {getStatusIcon(parcel.status)}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                                                 <div className="font-bold text-lg text-gray-900">{parcel?.tracking_code}</div>
-                                                <Badge className={`${getStatusColor(parcel.status)} font-medium px-3 py-1`}>
+                                                <Badge className={`${getStatusColor(parcel.status)} w-fit font-medium px-3 py-1`}>
                                                     {parcel.status.replace("-", " ").toUpperCase()}
                                                 </Badge>
                                             </div>
@@ -275,7 +275,7 @@ export default function CustomerDashboard() {
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                    <div className="flex items-start sm:items-center gap-4">
                                         <div className="text-right">
                                             <div className="text-2xl font-bold text-gray-900">${parcel?.amount}</div>
                                             <div className="text-sm text-gray-500 uppercase font-medium">{parcel?.payment_type}</div>

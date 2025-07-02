@@ -159,14 +159,6 @@ export default function AdminDashboard() {
                   <div className="text-sm text-orange-600">{t('pending')}</div>
                 </div>
               </div>
-
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-700">{t('deliverySuccessRate')}</span>
-                  <span className="text-sm font-bold text-green-600">94.2%</span>
-                </div>
-                <Progress value={94.2} className="h-3" />
-              </div>
             </CardContent>
           </Card>
 

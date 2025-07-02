@@ -123,7 +123,7 @@ export default function TrackParcel() {
                         <Label htmlFor="trackingId" className="text-sm font-medium">
                             {t('trackingId')}
                         </Label>
-                        <div className="flex gap-3">
+                        <div className="flex flex-col md:flex-row gap-3">
                             <Input
                                 id="trackingId"
                                 placeholder={t('enterTrackingIdExample')}

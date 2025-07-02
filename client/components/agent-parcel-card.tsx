@@ -72,7 +72,7 @@ const AgentParcelCard = ({ parcel, handleValue }: { parcel: ParcelsEntity, handl
                     <div className="flex items-center space-x-3">
                         {getStatusIcon(parcel.status)}
                         <div>
-                            <div className="font-medium">{parcel.id}</div>
+                            <div className="font-medium">{parcel?.tracking_code}</div>
                         </div>
                     </div>
                     <div className="flex items-center space-x-2">

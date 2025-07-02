@@ -332,7 +332,7 @@ export const updateParcelStatus = asyncHandler(async (req: Request, res: Respons
   emitSocketEvent({ req, roomId: parcel.id, event: SocketEventEnum.CHANGE_STATUS, payload: { data: newStatus?.toJSON() } })
 
   await sendEmail(
-    "We need to verify your email address",
+    "Parcel Status Update",
     parcel?.sender?.email,
     parcel?.sender?.full_name,
     { customer_name: parcel?.sender?.full_name, year: new Date().getFullYear(), tracking_code: parcel?.tracking_code, status:parcel?.status, tracking_url: `${process.env.CLIENT_URL}/customer/track?tracking_code=${parcel?.tracking_code}` },

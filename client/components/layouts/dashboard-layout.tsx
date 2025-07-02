@@ -92,7 +92,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center">
                             {/* Mobile menu button */}
                             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                                 <SheetTrigger asChild>
@@ -141,7 +141,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center sm:space-x-4">
                             <LanguageSwitcher />
                             <Button variant="outline" size="sm" onClick={handleLogout} className="hidden sm:flex">
                                 <LogOut className="h-4 w-4 mr-2" />

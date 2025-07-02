@@ -95,8 +95,8 @@ const AdminBookingList = () => {
                                 className="group p-6 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-300 bg-white"
                             >
                                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                                    <div className="flex items-center space-x-4 flex-1">
-                                        <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors duration-300">
+                                    <div className="flex space-x-4 flex-1">
+                                        <div className="p-2 w-fit h-fit bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors duration-300">
                                             <Package className="h-5 w-5 text-gray-600 group-hover:text-blue-600" />
                                         </div>
                                         <div className="flex-1">

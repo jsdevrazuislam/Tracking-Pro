@@ -181,12 +181,12 @@ export default function ManageUsers() {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col-reverse md:flex-row justify-between items-center">
             <div>
               <CardTitle>{t('allUsers')}</CardTitle>
               <CardDescription>{t('manageUserAccounts')}</CardDescription>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-col md:flex-row mb-4 md:mb-0 w-full md:w-fit gap-2 space-x-2">
               <div className="relative">
                 <Search className="h-4 w-4 z-10 absolute left-3 top-3 text-gray-400" />
                 <Input
@@ -197,7 +197,7 @@ export default function ManageUsers() {
                 />
               </div>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full md:w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -207,7 +207,7 @@ export default function ManageUsers() {
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full md:w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -221,47 +221,63 @@ export default function ManageUsers() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredUsers?.length > 0 ?  filteredUsers?.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    <Users className="h-5 w-5 text-gray-600" />
-                  </div>
-                  <div>
-                    <div className="font-medium">{user?.full_name}</div>
-                    <div className="text-sm text-gray-600 flex items-center space-x-4">
-                      <span className="flex items-center">
-                        <Mail className="h-3 w-3 mr-1" />
-                        {user.email}
-                      </span>
+            {filteredUsers?.length > 0 ? (
+              filteredUsers?.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-4 sm:gap-0"
+                >
+                  <div className="flex items-start space-x-4 w-full sm:w-auto">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Users className="h-5 w-5 text-gray-600" />
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Joined: {format(new Date(user.createdAt), 'yyyy-MM-dd')}
-                      {user.role === "customer" && ` • ${user?.totalOrders} orders`}
-                      {user.role === "agent" && ` • ${user?.completedDeliveries} deliveries`}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{user?.full_name}</div>
+                      <div className="text-sm text-gray-600 flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0">
+                        <span className="flex items-center">
+                          <Mail className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <span className="truncate">{user.email}</span>
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Joined: {format(new Date(user.createdAt), 'yyyy-MM-dd')}
+                        {user.role === "customer" && ` • ${user?.totalOrders} orders`}
+                        {user.role === "agent" && ` • ${user?.completedDeliveries} deliveries`}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col xs:flex-row items-start xs:items-center space-y-2 xs:space-y-0 xs:space-x-3 w-full sm:w-auto">
+                    <div className="flex space-x-2">
+                      <Badge className={getRoleColor(user.role)}>{user.role.toUpperCase()}</Badge>
+                      <Badge className={getStatusColor(user.status)}>{user.status.toUpperCase()}</Badge>
+                    </div>
+                    <div className="flex space-x-2 self-stretch">
+                      <Button
+                        isLoading={isPending}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleUserStatus(user.id)}
+                        className="flex-1 xs:flex-none"
+                      >
+                        {user.status === "active" ? "Deactivate" : "Activate"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteUser(user.id)}
+                        className="text-red-600 hover:text-red-700 flex-1 xs:flex-none"
+                        isLoading={isDeleting}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <Badge className={getRoleColor(user.role)}>{user.role.toUpperCase()}</Badge>
-                  <Badge className={getStatusColor(user.status)}>{user.status.toUpperCase()}</Badge>
-                  <div className="flex space-x-1">
-                    <Button isLoading={isPending} variant="outline" size="sm" onClick={() => toggleUserStatus(user.id)}>
-                      {user.status === "active" ? "Deactivate" : "Activate"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => deleteUser(user.id)}
-                      className="text-red-600 hover:text-red-700"
-                      isLoading={isDeleting}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )): <EmptyState type="no-users" className="shadow-none bg-transparent" />}
+              ))
+            ) : (
+              <EmptyState type="no-users" className="shadow-none bg-transparent" />
+            )}
           </div>
         </CardContent>
       </Card>

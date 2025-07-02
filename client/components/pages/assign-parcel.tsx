@@ -74,7 +74,7 @@ export default function AssignParcels() {
       <div className="w-full space-y-6">
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col-reverse gap-6 md:gap-0 md:flex-row md:justify-between md:items-center">
               <div>
                 <CardTitle>{t('unassignedParcels')} ({filteredParcels.length})</CardTitle>
                 <CardDescription>{t('selectParcelsToAssign')}</CardDescription>
@@ -85,7 +85,7 @@ export default function AssignParcels() {
                   placeholder="Search parcels..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-64"
+                  className="pl-10 w-full md:w-64"
                 />
               </div>
             </div>
