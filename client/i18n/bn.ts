@@ -203,5 +203,6 @@ export default {
     "liveTrackingMap": "লাইভ ট্র্যাকিং ম্যাপ",
     "connectingToLiveTracking": "লাইভ ট্র্যাকিংয়ের সাথে সংযোগ করা হচ্ছে...",
     "approximately": "গন্তব্য থেকে প্রায়",
-    "kmFromDestination":"কিমি দূরে"
+    "kmFromDestination":"কিমি দূরে",
+    "stop":"থামান"
 };

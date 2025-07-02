@@ -32,7 +32,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const { user, logout } = useAuthStore()
     const queryClient = useQueryClient()
-    const { t } = useTranslation()
+    const { t, language } = useTranslation()
 
     const handleLogout = () => {
         logout()
@@ -61,7 +61,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const navigation = useMemo(() => {
         const role = user?.role || "agent"
         return navByRole[role] || []
-    }, [user])
+    }, [user, language])
 
 
     const NavItems = ({ mobile = false }: { mobile?: boolean }) => (

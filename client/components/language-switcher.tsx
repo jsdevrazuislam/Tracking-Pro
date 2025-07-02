@@ -41,8 +41,8 @@ export function LanguageSwitcher() {
                     className="flex items-center space-x-2 hover:bg-gray-100 transition-colors"
                 >
                     <Globe className="h-4 w-4" />
-                    <span className="hidden sm:inline text-sm">{language === 'en' ? '🇺🇸' : '🇧🇩'}</span>
-                    <span className="hidden md:inline text-sm">{language === 'en' ? 'English' : 'বাংলা'}</span>
+                    <span className=" text-sm">{language === 'en' ? '🇺🇸' : '🇧🇩'}</span>
+                    <span className=" text-sm">{language === 'en' ? 'English' : 'বাংলা'}</span>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">

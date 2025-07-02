@@ -10,6 +10,7 @@ import { CheckCircle, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/store'
 import { updateStatus } from '@/lib/apis/parcel'
+import { useTranslation } from '@/hooks/use-translation'
 
 
 const BarcodeScanner: React.FC = () => {
@@ -21,6 +22,7 @@ const BarcodeScanner: React.FC = () => {
 
   const beepAudio = useRef<HTMLAudioElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
+  const { t } = useTranslation()
 
   const queryClient = useQueryClient()
 
@@ -103,12 +105,12 @@ const BarcodeScanner: React.FC = () => {
 
   return (
     <div className="max-w-xl mx-auto p-4 border rounded-lg bg-background shadow-md">
-      <h2 className="text-lg font-semibold mb-4">Scan Parcel to Confirm Action</h2>
+      <h2 className="text-lg font-semibold mb-4">{t('scanBarcodeConfirmPickup')}</h2>
 
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertTriangle className="w-5 h-5" />
-          <AlertTitle>Camera Error</AlertTitle>
+          <AlertTitle>{t('cameraAccessRequired')}</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -116,8 +118,8 @@ const BarcodeScanner: React.FC = () => {
       {result && (
         <Alert variant="default" className="mb-4">
           <CheckCircle className="w-5 h-5" />
-          <AlertTitle>Scanned Successfully</AlertTitle>
-          <AlertDescription>Parcel ID: {result}</AlertDescription>
+          <AlertTitle>{t('barcodeScannedSuccessfully')}</AlertTitle>
+          <AlertDescription>Tracking ID: {result}</AlertDescription>
         </Alert>
       )}
 
@@ -129,7 +131,7 @@ const BarcodeScanner: React.FC = () => {
         />
         {!scanning && (
           <div className="absolute inset-0 flex items-center justify-center text-white bg-black/70 text-sm">
-            Camera inactive
+            {t('cameraAccessRequired')}
           </div>
         )}
       </div>
@@ -139,17 +141,17 @@ const BarcodeScanner: React.FC = () => {
           {scanning ? 'Scanning...' : 'Start Scan'}
         </Button>
         <Button variant="outline" onClick={() => setScanning(false)} disabled={!scanning}>
-          Stop
+          {t('stop')}
         </Button>
       </div>
 
       {result && (
         <div className="mt-4 flex gap-2">
           <Button className='bg-green-500' onClick={() => handleValue(result, 'picked')}>
-            Confirm Pickup
+            {t('confirmPickup')}
           </Button>
           <Button variant="default" onClick={() => handleValue(result, 'delivered')}>
-            Confirm Delivery
+            {t('confirmDelivery')}
           </Button>
         </div>
       )}

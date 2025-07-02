@@ -203,5 +203,6 @@ export default {
     "liveTrackingMap": "Live Tracking Map",
     "connectingToLiveTracking": "Connecting to live tracking...",
     "approximately": "Approximately",
-    "kmFromDestination":"km from destination"
+    "kmFromDestination":"km from destination",
+    "stop":"Stop",
 };

@@ -16,6 +16,8 @@ import sequelize from "@/config/db";
 import { sendEmail } from "@/utils/email";
 import sizeOf from "image-size";
 import { emitSocketEvent } from "@/socket";
+import { validate as isUuid } from 'uuid'
+
 
 
 
@@ -296,13 +298,12 @@ export const updateParcelStatus = asyncHandler(async (req: Request, res: Respons
   const { parcelId } = req.params;
   const { status, current_location } = req.body;
 
+  const whereClause = isUuid(parcelId)
+    ? { id: parcelId }
+    : { tracking_code: parcelId }
+
   const parcel = await Parcel.findOne({
-    where: {
-      [Op.or]: [
-        { id: parcelId },
-        { tracking_code: parcelId },
-      ],
-    },
+    where: whereClause,
     include: [
       {
         model: User,
