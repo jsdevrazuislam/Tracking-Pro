@@ -17,7 +17,7 @@ import cookieParser from "cookie-parser";
 import { initializeSocketIO } from "@/socket";
 import { load_routes } from "@/utils/load-routes";
 
-const origin = ["http://192.168.1.104:3000", "http://192.168.8.76:3000", "http://localhost:3000", 'https://tracking-pro.vercel.app']
+const origin = ["http://192.168.1.104:3000", "http://192.168.8.76:3000", "http://localhost:3000", "https://52d9-103-7-5-26.ngrok-free.app", 'https://tracking-pro.vercel.app']
 const app: Application = express();
 const httpServer = createServer(app);
 

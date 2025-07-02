@@ -146,11 +146,11 @@ const BarcodeScanner: React.FC = () => {
       </div>
 
       {result && (
-        <div className="mt-4 flex gap-2">
-          <Button className='bg-green-500' onClick={() => handleValue(result, 'picked')}>
+        <div className="mt-4 flex flex-wrap md:flex-nowrap gap-2">
+          <Button className='bg-green-500 w-full' onClick={() => handleValue(result, 'picked')}>
             {t('confirmPickup')}
           </Button>
-          <Button variant="default" onClick={() => handleValue(result, 'delivered')}>
+          <Button variant="default" className='w-full' onClick={() => handleValue(result, 'delivered')}>
             {t('confirmDelivery')}
           </Button>
         </div>
