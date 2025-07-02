@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/store'
 import { updateStatus } from '@/lib/apis/parcel'
 import { useTranslation } from '@/hooks/use-translation'
+import { useRouter } from 'next/navigation'
 
 
 const BarcodeScanner: React.FC = () => {
@@ -23,12 +24,17 @@ const BarcodeScanner: React.FC = () => {
   const beepAudio = useRef<HTMLAudioElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const { t } = useTranslation()
+  const router = useRouter()
 
   const queryClient = useQueryClient()
 
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: updateStatus,
-    onError: (error: any) => toast.error(error?.message)
+    onSuccess: () =>{
+      toast.success("Updated Parcel Status Successfully")
+      router.push('/agent/dashboard')
+    },
+    onError: (error) => toast.error(error?.message)
   })
 
   const handleValue = (id: string, status: string) => {
@@ -147,10 +153,10 @@ const BarcodeScanner: React.FC = () => {
 
       {result && (
         <div className="mt-4 flex flex-wrap md:flex-nowrap gap-2">
-          <Button className='bg-green-500 w-full' onClick={() => handleValue(result, 'picked')}>
+          <Button isLoading={isPending} className='bg-green-500 w-full' onClick={() => handleValue(result, 'picked')}>
             {t('confirmPickup')}
           </Button>
-          <Button variant="default" className='w-full' onClick={() => handleValue(result, 'delivered')}>
+          <Button isLoading={isPending} variant="default" className='w-full' onClick={() => handleValue(result, 'delivered')}>
             {t('confirmDelivery')}
           </Button>
         </div>
