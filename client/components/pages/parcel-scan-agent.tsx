@@ -1,61 +1,162 @@
-'use client';
+'use client'
 
-import React, { useEffect, useState } from 'react';
-import { BrowserMultiFormatReader, Result } from '@zxing/library';
+import React, { useEffect, useRef, useState } from 'react'
+import { BrowserMultiFormatReader, Result } from '@zxing/library'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { CheckCircle, AlertTriangle } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/store/store'
+import { updateStatus } from '@/lib/apis/parcel'
+
 
 const BarcodeScanner: React.FC = () => {
-  const [result, setResult] = useState<string | null>(null);
-  const [videoDevice, setVideoDevice] = useState<MediaDeviceInfo | null>(null);
+  const [result, setResult] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [scanning, setScanning] = useState(false)
+  const [videoDevice, setVideoDevice] = useState<MediaDeviceInfo | null>(null)
+  const { currentLocation } = useAuthStore()
+
+  const beepAudio = useRef<HTMLAudioElement | null>(null)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+
+  const queryClient = useQueryClient()
+
+  const { mutate } = useMutation({
+    mutationFn: updateStatus,
+    onError: (error: any) => toast.error(error?.message)
+  })
+
+  const handleValue = (id: string, status: string) => {
+    if (!currentLocation) {
+      toast.error('Please enable your location permission')
+      return
+    }
+
+    queryClient.setQueryData(['getAgentAssignedParcels'], (oldData: any) => {
+      if (!oldData?.data?.parcels) return oldData
+
+      const updatedParcels = oldData.data.parcels.map((parcel: any) =>
+        parcel.id === id ? { ...parcel, status } : parcel
+      )
+
+      return {
+        ...oldData,
+        data: { ...oldData.data, parcels: updatedParcels }
+      }
+    })
+
+    mutate({ id, status, current_location: currentLocation })
+  }
 
   useEffect(() => {
-    const reader = new BrowserMultiFormatReader();
+    beepAudio.current = new Audio('/sounds/beep.mp3')
+    beepAudio.current.load()
+  }, [])
 
-    async function init() {
+  useEffect(() => {
+    const reader = new BrowserMultiFormatReader()
+
+    const initDevices = async () => {
       try {
-        const videoDevices = await reader.listVideoInputDevices();
-        if (videoDevices.length > 0) {
-          setVideoDevice(videoDevices[0]);
-        }
+        const devices = await reader.listVideoInputDevices()
+        if (devices.length > 0) setVideoDevice(devices[1])
+        else setError('No video input devices found')
       } catch (err) {
-        console.error("Error listing video devices", err);
+        console.error('Error listing devices', err)
+        setError('Could not access video devices')
       }
     }
 
-    init();
-  }, []);
+    initDevices()
+  }, [])
 
   useEffect(() => {
-    if (!videoDevice) return;
+    if (!scanning || !videoDevice) return
 
-    const reader = new BrowserMultiFormatReader();
-    let controls: any = undefined;
+    const reader = new BrowserMultiFormatReader()
+    let controls: any
 
-    reader.decodeFromVideoDevice(videoDevice.deviceId, 'video', (result: Result | undefined, error) => {
-      if (result) {
-        setResult(result.getText());
-        controls?.stop(); // stop scanner once code is found
-      }
-    }).then(ctrl => {
-      controls = ctrl;
-    }).catch(err => {
-      console.error('Decode error:', err);
-    });
+    reader
+      .decodeFromVideoDevice(videoDevice.deviceId, 'video', async (result: Result | undefined) => {
+        if (result) {
+          await beepAudio.current?.play().catch(console.error)
+          setResult(result.getText())
+          setScanning(false)
+          controls?.stop()
+        }
+      })
+      .then((ctrl) => (controls = ctrl))
+      .catch((err) => {
+        console.error('Decode error:', err)
+        toast.error('Failed to start camera')
+        setError('Camera access denied or unavailable')
+        setScanning(false)
+      })
 
     return () => {
-      controls?.stop();
-    };
-  }, [videoDevice]);
+      controls?.stop()
+    }
+  }, [scanning, videoDevice])
 
   return (
-    <div>
-      {result ? (
-        <p>Scanned Code: <strong>{result}</strong></p>
-      ) : (
-        <p>Scanning...</p>
-      )}
-      <video id="video" width="600" height="400" />
-    </div>
-  );
-};
+    <div className="max-w-xl mx-auto p-4 border rounded-lg bg-background shadow-md">
+      <h2 className="text-lg font-semibold mb-4">Scan Parcel to Confirm Action</h2>
 
-export default BarcodeScanner;
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="w-5 h-5" />
+          <AlertTitle>Camera Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {result && (
+        <Alert variant="default" className="mb-4">
+          <CheckCircle className="w-5 h-5" />
+          <AlertTitle>Scanned Successfully</AlertTitle>
+          <AlertDescription>Parcel ID: {result}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="relative border bg-black rounded overflow-hidden">
+        <video
+          id="video"
+          ref={videoRef}
+          className={cn('w-full h-64 object-cover', !scanning && 'hidden')}
+        />
+        {!scanning && (
+          <div className="absolute inset-0 flex items-center justify-center text-white bg-black/70 text-sm">
+            Camera inactive
+          </div>
+        )}
+      </div>
+
+      <div className="flex gap-2 mt-4">
+        <Button onClick={() => setScanning(true)} disabled={scanning}>
+          {scanning ? 'Scanning...' : 'Start Scan'}
+        </Button>
+        <Button variant="outline" onClick={() => setScanning(false)} disabled={!scanning}>
+          Stop
+        </Button>
+      </div>
+
+      {result && (
+        <div className="mt-4 flex gap-2">
+          <Button className='bg-green-500' onClick={() => handleValue(result, 'picked')}>
+            Confirm Pickup
+          </Button>
+          <Button variant="default" onClick={() => handleValue(result, 'delivered')}>
+            Confirm Delivery
+          </Button>
+        </div>
+      )}
+
+      <audio ref={beepAudio} src="/sounds/beep.mp3" hidden preload="auto" />
+    </div>
+  )
+}
+
+export default BarcodeScanner
