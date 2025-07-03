@@ -204,5 +204,10 @@ export default {
     "connectingToLiveTracking": "লাইভ ট্র্যাকিংয়ের সাথে সংযোগ করা হচ্ছে...",
     "approximately": "গন্তব্য থেকে প্রায়",
     "kmFromDestination":"কিমি দূরে",
-    "stop":"থামান"
+    "stop":"থামান",
+     "noResultsFound": "কোনো ফলাফল পাওয়া যায়নি",
+    "noResultsFoundFor": "এর জন্য কোনো ফলাফল পাওয়া যায়নি",
+    "tryDifferentKeywords": "ভিন্ন কীওয়ার্ড ব্যবহার করে দেখুন অথবা আপনার ফিল্টারগুলি সাফ করুন।",
+    "contactSupport": "সাপোর্টে যোগাযোগ করুন",
+    "clearFilter": 'ফিল্টার পরিষ্কার করুন'
 };

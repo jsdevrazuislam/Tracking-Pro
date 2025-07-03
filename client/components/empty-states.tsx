@@ -304,18 +304,23 @@ export function NoSearchResultsEmptyState({
   onClearFilters?: () => void
   className?: string
 }) {
+
+  const { t } = useTranslation()
+
   return (
     <EmptyState
       type="no-search-results"
+      title={t('noResultsFound')}
       description={
         searchTerm
-          ? `No results found for "${searchTerm}". Try different keywords or clear your filters.`
+          ? `${t('noResultsFoundFor')} "${searchTerm}". ${t('tryDifferentKeywords')}`
           : "No results match your current filters. Try adjusting your search criteria."
       }
       onAction={onClearFilters}
       className={className}
       showSecondaryAction={true}
-      secondaryActionLabel="Contact Support"
+      actionLabel={t('clearFilter')}
+      secondaryActionLabel={t('contactSupport')}
       onSecondaryAction={() => alert("Contact support feature coming soon!")}
     />
   )

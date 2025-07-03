@@ -15,6 +15,7 @@ import { getAllBookings } from '@/lib/apis/admin'
 import { format } from 'date-fns';
 import { TrackingSkeleton } from '@/components/loading-skeleton'
 import { useTranslation } from '@/hooks/use-translation'
+import { NoSearchResultsEmptyState } from '../empty-states'
 
 
 
@@ -79,7 +80,7 @@ const AdminBookingList = () => {
                                 <SelectContent>
                                     <SelectItem value="all">All Status</SelectItem>
                                     <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="in-transit">In Transit</SelectItem>
+                                    <SelectItem value="in_transit">In Transit</SelectItem>
                                     <SelectItem value="delivered">Delivered</SelectItem>
                                     <SelectItem value="failed">Failed</SelectItem>
                                 </SelectContent>
@@ -89,7 +90,10 @@ const AdminBookingList = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {isLoading ? <TrackingSkeleton /> : filteredBookings.map((booking) => (
+                        {isLoading ? <TrackingSkeleton /> : filteredBookings.length === 0  ? <NoSearchResultsEmptyState onClearFilters={() => {
+                            setSearchTerm('')
+                            setStatusFilter('all')
+                        }} className=' bg-transparent shadow-none' searchTerm={statusFilter ?? searchTerm} /> : filteredBookings.map((booking) => (
                             <div
                                 key={booking.id}
                                 className="group p-6 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-300 bg-white"
@@ -128,6 +132,8 @@ const AdminBookingList = () => {
                                 </div>
                             </div>
                         ))}
+
+                        
                     </div>
                 </CardContent>
             </Card>

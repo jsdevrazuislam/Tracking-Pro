@@ -205,4 +205,9 @@ export default {
     "approximately": "Approximately",
     "kmFromDestination":"km from destination",
     "stop":"Stop",
+    "noResultsFound": "No Results Found",
+    "noResultsFoundFor": "No results found for",
+    "tryDifferentKeywords": "Try different keywords or clear your filters.",
+    "contactSupport": "Contact Support",
+    'clearFilter': 'Clear Filters'
 };
